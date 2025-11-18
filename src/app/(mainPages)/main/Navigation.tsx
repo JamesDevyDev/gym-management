@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import useAuthStore from "@/zustand/useAuthStore"
-import { Menu, Home, Settings, LogOut } from "lucide-react"
+import { Menu, Home, Settings, LogOut, Users } from "lucide-react"
 
 const Navigation = () => {
     const { getAuthUserFunction, LogoutFunction } = useAuthStore()
@@ -86,8 +86,8 @@ const Navigation = () => {
                         {/* Sidebar links for staff */}
                         {user?.role === 'staff' &&
                             <li>
-                                <a className="flex items-center gap-2 text-gray-900 hover:text-red-500 font-medium">
-                                    <Home className="w-5 h-5" /> Staff
+                                <a href='/main/staff/members' className="flex items-center gap-2 text-gray-900 hover:text-red-500 font-medium">
+                                    <Users className="w-5 h-5" /> Members
                                 </a>
                             </li>
                         }
