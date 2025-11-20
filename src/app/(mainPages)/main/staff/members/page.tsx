@@ -71,7 +71,12 @@ export default function StaffMembersPage() {
                     <div className="modal-box">
                         <form method="dialog">
                             {/* Close button */}
-                            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                            <button
+                                onClick={() => {
+                                    modal(null, null);
+                                }}
+                                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                            >✕</button>
                         </form>
 
                         {/* Modal Title */}
@@ -128,7 +133,6 @@ export default function StaffMembersPage() {
                                 <button className="btn btn-danger mt-4" onClick={() => console.log('delete')}>
                                     Yes, Delete
                                 </button>
-                                <button className="btn btn-ghost mt-4">Cancel</button>
                             </div>
                         )}
                     </div>
