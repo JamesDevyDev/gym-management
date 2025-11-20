@@ -50,7 +50,13 @@ export default function StaffMembersPage() {
 
     const previousPage = () => {
         setCurrentPage(currentPage - 1)
+    }
 
+    const [modalView, setModalView] = useState()
+    const [selectedDetails, setSelectedDetails] = useState()
+    const modal = (member: any, action: any) => {
+        setModalView(action)
+        setSelectedDetails(member)
     }
 
     return (
@@ -59,6 +65,18 @@ export default function StaffMembersPage() {
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-gray-900 mb-2">Members</h1>
                 </div>
+
+                {/* MODAL */}
+                <dialog id="my_modal_3" className="modal">
+                    <div className="modal-box">
+                        <form method="dialog">
+                            {/* if there is a button in form, it will close the modal */}
+                            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                        </form>
+                        <h3 className="font-bold text-lg">{modalView}</h3>
+                        <p className="py-4">{JSON.stringify(selectedDetails)}</p>
+                    </div>
+                </dialog>
 
                 {/* Statistics Cards */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-6">
@@ -211,18 +229,30 @@ export default function StaffMembersPage() {
                                             <td className="px-6 py-4">
                                                 <div className="flex justify-end gap-2">
                                                     <button
+                                                        onClick={() => {
+                                                            modal(member, "view");
+                                                            (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal();
+                                                        }}
                                                         className="cursor-pointer p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-150"
                                                         title="View"
                                                     >
                                                         <Eye className="w-4 h-4" />
                                                     </button>
                                                     <button
+                                                        onClick={() => {
+                                                            modal(member, 'edit');
+                                                            (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal();
+                                                        }}
                                                         className="cursor-pointer p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors duration-150"
                                                         title="Edit"
                                                     >
                                                         <Pencil className="w-4 h-4" />
                                                     </button>
                                                     <button
+                                                        onClick={() => {
+                                                            modal(member, 'delete');
+                                                            (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal();
+                                                        }}
                                                         className="cursor-pointer p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors duration-150"
                                                         title="Delete"
                                                     >
@@ -299,13 +329,28 @@ export default function StaffMembersPage() {
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <button className="flex-1 py-2 px-3 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-sm font-medium">
+                                        <button
+                                            onClick={() => {
+                                                modal(member, 'view');
+                                                (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal();
+                                            }}
+                                            className="flex-1 py-2 px-3 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-sm font-medium">
                                             View
                                         </button>
-                                        <button className="flex-1 py-2 px-3 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors text-sm font-medium">
+                                        <button
+                                            onClick={() => {
+                                                modal(member, 'edit');
+                                                (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal();
+                                            }}
+                                            className="flex-1 py-2 px-3 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors text-sm font-medium">
                                             Edit
                                         </button>
-                                        <button className="flex-1 py-2 px-3 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors text-sm font-medium">
+                                        <button
+                                            onClick={() => {
+                                                modal(member, 'delete');
+                                                (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal();
+                                            }}
+                                            className="flex-1 py-2 px-3 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors text-sm font-medium">
                                             Delete
                                         </button>
                                     </div>
