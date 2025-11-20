@@ -53,7 +53,7 @@ export default function StaffMembersPage() {
     }
 
     const [modalView, setModalView] = useState()
-    const [selectedDetails, setSelectedDetails] = useState()
+    const [selectedDetails, setSelectedDetails] = useState<Member>()
     const modal = (member: any, action: any) => {
         setModalView(action)
         setSelectedDetails(member)
@@ -70,11 +70,67 @@ export default function StaffMembersPage() {
                 <dialog id="my_modal_3" className="modal">
                     <div className="modal-box">
                         <form method="dialog">
-                            {/* if there is a button in form, it will close the modal */}
+                            {/* Close button */}
                             <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
                         </form>
-                        <h3 className="font-bold text-lg">{modalView}</h3>
-                        <p className="py-4">{JSON.stringify(selectedDetails)}</p>
+
+                        {/* Modal Title */}
+                        <h3 className="font-bold text-lg">{modalView === 'edit' ? 'Edit Member' : modalView === 'view' ? 'View Member' : 'Delete Member'}</h3>
+
+                        {/* Conditional Content */}
+                        {modalView === 'view' && selectedDetails && (
+                            <div className="py-4">
+                                <p><strong>Username:</strong> {selectedDetails.username}</p>
+                                <p><strong>Email:</strong> {selectedDetails.email}</p>
+                                <p><strong>Role:</strong> {selectedDetails.role}</p>
+                                <p><strong>Activated:</strong> {selectedDetails.activated ? 'Yes' : 'No'}</p>
+                                <p><strong>Created At:</strong> {new Date(selectedDetails.createdAt).toLocaleString()}</p>
+                            </div>
+                        )}
+
+                        {modalView === 'edit' && selectedDetails && (
+                            <div className="py-4">
+                                <label className="block">Username:</label>
+                                <input
+                                    type="text"
+                                    defaultValue={selectedDetails.username}
+                                    className="input input-bordered w-full"
+                                    onChange={(e) => setSelectedDetails({ ...selectedDetails, username: e.target.value })}
+                                />
+
+                                <label className="block mt-2">Email:</label>
+                                <input
+                                    type="email"
+                                    defaultValue={selectedDetails.email}
+                                    className="input input-bordered w-full"
+                                    onChange={(e) => setSelectedDetails({ ...selectedDetails, email: e.target.value })}
+                                />
+
+                                <label className="block mt-2">Status:</label>
+                                <select
+                                    className="select select-bordered w-full"
+                                    value={selectedDetails.activated ? 'active' : 'inactive'}
+                                    onChange={(e) => setSelectedDetails({
+                                        ...selectedDetails,
+                                        activated: e.target.value === 'active',
+                                    })}
+                                >
+                                    <option value="active">Activated</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+
+                            </div>
+                        )}
+
+                        {modalView === 'delete' && selectedDetails && (
+                            <div className="py-4">
+                                <p>Are you sure you want to delete this member? {selectedDetails.username}</p>
+                                <button className="btn btn-danger mt-4" onClick={() => console.log('delete')}>
+                                    Yes, Delete
+                                </button>
+                                <button className="btn btn-ghost mt-4">Cancel</button>
+                            </div>
+                        )}
                     </div>
                 </dialog>
 
