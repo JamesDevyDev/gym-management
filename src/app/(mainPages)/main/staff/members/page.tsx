@@ -2,6 +2,7 @@
 import { Eye, Pencil, Trash2, Users, UserCheck, UserX, ChevronLeft, ChevronRight } from "lucide-react";
 import useStaffStore from "@/zustand/useStaffStore";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast"; // Install: npm install react-hot-toast
 
 interface Member {
     _id: string;
@@ -13,9 +14,8 @@ interface Member {
     pfp?: string;
 }
 
-
 export default function StaffMembersPage() {
-    const { getMembers } = useStaffStore()
+    const { getMembers, editMembers } = useStaffStore()
 
     const [members, setMembers] = useState<Member[]>([])
     const [currentPage, setCurrentPage] = useState(1)
@@ -24,39 +24,115 @@ export default function StaffMembersPage() {
     const [totalActivated, setTotalActivated] = useState(0)
     const [totalInactive, setTotalInactive] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
+    const [isSaving, setIsSaving] = useState(false)
+
+    const [modalView, setModalView] = useState<string | null>(null)
+    const [selectedDetails, setSelectedDetails] = useState<Member | null>(null)
+
+    // Fetch members data
+    const fetchMembers = async () => {
+        setIsLoading(true)
+        const data = await getMembers(currentPage)
+
+        setMembers(data?.members || [])
+        setCurrentPage(data?.currentPage || 1)
+        setTotalMembers(data?.totalMembers || 0)
+        setTotalPages(data?.totalPages || 1)
+        setTotalActivated(data?.totalActivated || 0)
+        setTotalInactive(data?.totalInactive || 0)
+        setIsLoading(false)
+    }
 
     useEffect(() => {
-        const renderData = async () => {
-            setIsLoading(true)
-            const data = await getMembers(currentPage) //The value in here is the page number
-
-            console.log(data)
-
-            setMembers(data?.members)
-            setCurrentPage(data?.currentPage)
-            setTotalMembers(data?.totalMembers)
-            setTotalPages(data?.totalPages)
-            setTotalActivated(data?.totalActivated)
-            setTotalInactive(data?.totalInactive)
-            setIsLoading(false)
-        }
-
-        renderData()
+        fetchMembers()
     }, [currentPage])
 
-    const nextPage = () => {
-        setCurrentPage(currentPage + 1)
-    }
+    const nextPage = () => setCurrentPage(currentPage + 1)
+    const previousPage = () => setCurrentPage(currentPage - 1)
 
-    const previousPage = () => {
-        setCurrentPage(currentPage - 1)
-    }
-
-    const [modalView, setModalView] = useState()
-    const [selectedDetails, setSelectedDetails] = useState<Member>()
-    const modal = (member: any, action: any) => {
+    const modal = (member: Member | null, action: string | null) => {
         setModalView(action)
         setSelectedDetails(member)
+    }
+
+    const closeModal = () => {
+        const dialogElement = document.getElementById('my_modal_3') as HTMLDialogElement
+        dialogElement?.close()
+        setTimeout(() => {
+            modal(null, null)
+        }, 200)
+    }
+
+    // Handle Edit with validation and error handling
+    const handleEdit = async () => {
+        if (!selectedDetails) return
+
+        // Frontend validation
+        if (!selectedDetails.username.trim()) {
+            toast.error("Username cannot be empty")
+            return
+        }
+
+        if (!selectedDetails.email.trim()) {
+            toast.error("Email cannot be empty")
+            return
+        }
+
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(selectedDetails.email)) {
+            toast.error("Please enter a valid email address")
+            return
+        }
+
+        setIsSaving(true)
+
+        try {
+            const result = await editMembers(
+                selectedDetails._id,
+                selectedDetails.username,
+                selectedDetails.email,
+                selectedDetails.activated
+            )
+
+            if (result.success) {
+                toast.success("Member updated successfully!")
+
+                // Update local state immediately for instant feedback
+                setMembers(prevMembers =>
+                    prevMembers.map(member =>
+                        member._id === selectedDetails._id
+                            ? { ...member, ...selectedDetails }
+                            : member
+                    )
+                )
+
+                // Update statistics if activation status changed
+                const originalMember = members.find(m => m._id === selectedDetails._id)
+                if (originalMember && originalMember.activated !== selectedDetails.activated) {
+                    if (selectedDetails.activated) {
+                        setTotalActivated(prev => prev + 1)
+                        setTotalInactive(prev => prev - 1)
+                    } else {
+                        setTotalActivated(prev => prev - 1)
+                        setTotalInactive(prev => prev + 1)
+                    }
+                }
+
+                closeModal()
+
+                // Optionally refetch data from server to ensure consistency
+                // Uncomment if you want to refresh from backend
+                // await fetchMembers()
+            } else {
+                toast.error(result.message || "Failed to update member")
+            }
+        } catch (error: any) {
+            console.error("Edit error:", error)
+            toast.error(error.message || "An error occurred while updating")
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     return (
@@ -67,74 +143,163 @@ export default function StaffMembersPage() {
                 </div>
 
                 {/* MODAL */}
-                <dialog id="my_modal_3" className="modal">
-                    <div className="modal-box">
-                        <form method="dialog">
-                            {/* Close button */}
-                            <button
-                                onClick={() => {
-                                    modal(null, null);
-                                }}
-                                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-                            >✕</button>
-                        </form>
-
-                        {/* Modal Title */}
-                        <h3 className="font-bold text-lg">{modalView === 'edit' ? 'Edit Member' : modalView === 'view' ? 'View Member' : 'Delete Member'}</h3>
-
-                        {/* Conditional Content */}
-                        {modalView === 'view' && selectedDetails && (
-                            <div className="py-4">
-                                <p><strong>Username:</strong> {selectedDetails.username}</p>
-                                <p><strong>Email:</strong> {selectedDetails.email}</p>
-                                <p><strong>Role:</strong> {selectedDetails.role}</p>
-                                <p><strong>Activated:</strong> {selectedDetails.activated ? 'Yes' : 'No'}</p>
-                                <p><strong>Created At:</strong> {new Date(selectedDetails.createdAt).toLocaleString()}</p>
-                            </div>
-                        )}
-
-                        {modalView === 'edit' && selectedDetails && (
-                            <div className="py-4">
-                                <label className="block">Username:</label>
-                                <input
-                                    type="text"
-                                    defaultValue={selectedDetails.username}
-                                    className="input input-bordered w-full"
-                                    onChange={(e) => setSelectedDetails({ ...selectedDetails, username: e.target.value })}
-                                />
-
-                                <label className="block mt-2">Email:</label>
-                                <input
-                                    type="email"
-                                    defaultValue={selectedDetails.email}
-                                    className="input input-bordered w-full"
-                                    onChange={(e) => setSelectedDetails({ ...selectedDetails, email: e.target.value })}
-                                />
-
-                                <label className="block mt-2">Status:</label>
-                                <select
-                                    className="select select-bordered w-full"
-                                    value={selectedDetails.activated ? 'active' : 'inactive'}
-                                    onChange={(e) => setSelectedDetails({
-                                        ...selectedDetails,
-                                        activated: e.target.value === 'active',
-                                    })}
+                <dialog id="my_modal_3" className="modal backdrop-blur-sm">
+                    <div className="modal-box max-w-md bg-white shadow-xl rounded-xl border border-gray-100 p-0">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                {modalView === 'edit' ? 'Edit Member' : modalView === 'view' ? 'Member Details' : 'Delete Member'}
+                            </h3>
+                            <form method="dialog">
+                                <button
+                                    onClick={() => modal(null, null)}
+                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    disabled={isSaving}
                                 >
-                                    <option value="active">Activated</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-
-                            </div>
-                        )}
-
-                        {modalView === 'delete' && selectedDetails && (
-                            <div className="py-4">
-                                <p>Are you sure you want to delete this member? {selectedDetails.username}</p>
-                                <button className="btn btn-danger mt-4" onClick={() => console.log('delete')}>
-                                    Yes, Delete
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
                                 </button>
-                            </div>
-                        )}
+                            </form>
+                        </div>
+
+                        {/* Content */}
+                        <div className="px-6 py-5">
+                            {modalView === 'view' && selectedDetails && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+                                        <img
+                                            src={selectedDetails.pfp}
+                                            alt={selectedDetails.username}
+                                            className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-100"
+                                        />
+                                        <div>
+                                            <p className="font-semibold text-gray-900">{selectedDetails.username}</p>
+                                            <p className="text-sm text-gray-500">{selectedDetails.email}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">Role</p>
+                                            <p className="text-sm font-medium text-gray-900 capitalize">{selectedDetails.role}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">Status</p>
+                                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${selectedDetails.activated ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                                                }`}>
+                                                {selectedDetails.activated ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">Registered</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {new Date(selectedDetails.createdAt).toLocaleDateString("en-US", {
+                                                    year: "numeric",
+                                                    month: "long",
+                                                    day: "numeric"
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {modalView === 'edit' && selectedDetails && (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            Username <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={selectedDetails.username}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
+                                            onChange={(e) => setSelectedDetails({ ...selectedDetails, username: e.target.value })}
+                                            disabled={isSaving}
+                                            placeholder="Enter username"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            Email <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="email"
+                                            value={selectedDetails.email}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
+                                            onChange={(e) => setSelectedDetails({ ...selectedDetails, email: e.target.value })}
+                                            disabled={isSaving}
+                                            placeholder="Enter email"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+                                        <select
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
+                                            value={selectedDetails.activated ? 'active' : 'inactive'}
+                                            onChange={(e) => setSelectedDetails({
+                                                ...selectedDetails,
+                                                activated: e.target.value === 'active',
+                                            })}
+                                            disabled={isSaving}
+                                        >
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="flex gap-2 pt-2">
+                                        <button
+                                            onClick={handleEdit}
+                                            disabled={isSaving}
+                                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        >
+                                            {isSaving ? (
+                                                <>
+                                                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Saving...
+                                                </>
+                                            ) : (
+                                                'Save Changes'
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {modalView === 'delete' && selectedDetails && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
+                                        <div className="flex-shrink-0">
+                                            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-red-900">This action cannot be undone</p>
+                                            <p className="text-sm text-red-700 mt-0.5">
+                                                Are you sure you want to delete <span className="font-semibold">{selectedDetails.username}</span>?
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2 pt-2">
+                                        <button
+                                            onClick={() => console.log('delete')}
+                                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                                        >
+                                            Delete Member
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </dialog>
 
