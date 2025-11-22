@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { usePathname } from "next/navigation"
 import useAuthStore from "@/zustand/useAuthStore"
 import { Menu, Home, Settings, LogOut, Users } from "lucide-react"
 
@@ -7,6 +8,7 @@ const Navigation = () => {
     const { getAuthUserFunction, LogoutFunction } = useAuthStore()
     const [user, setUser] = useState<any>(null)
     const [loading, setLoading] = useState(true)
+    const pathname = usePathname()
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -19,13 +21,20 @@ const Navigation = () => {
 
     return (
         <div className="drawer">
-            <input id="my-drawer-1" type="checkbox" className="drawer-toggle" />
+            {/* Make toggle a peer */}
+            <input id="my-drawer-1" type="checkbox" className="drawer-toggle peer" />
 
             {/* Drawer content */}
             <div className="drawer-content">
                 <label
                     htmlFor="my-drawer-1"
-                    className="w-[50px] h-[50px] bg-gray-300/80 text-black hover:bg-gray-400/70 flex items-center justify-center rounded-lg cursor-pointer"
+                    className="
+                        w-[50px] h-[50px] bg-gray-300/40 text-black 
+                        hover:bg-gray-400/70 flex items-center justify-center 
+                        rounded-lg cursor-pointer transition
+                        peer-checked:bg-gray-400/90
+                        peer-checked:text-red-500
+                    "
                 >
                     <Menu className="w-6 h-6" />
                 </label>
@@ -46,7 +55,7 @@ const Navigation = () => {
                             />
                         </div>
 
-                        {/* User Info or Skeleton */}
+                        {/* User Info */}
                         {loading ? (
                             <div className="flex flex-col items-start mb-4 p-4 border-l-4 border-red-500 bg-red-100 rounded-lg animate-pulse">
                                 <div className="h-4 bg-gray-300 rounded w-32 mb-2"></div>
@@ -63,49 +72,87 @@ const Navigation = () => {
 
                         {/* Sidebar Links */}
                         <li>
-                            <a className="flex items-center gap-2 text-gray-900 hover:text-red-500 font-medium">
+                            <a
+                                className={`
+                                    flex items-center gap-2 font-medium
+                                    ${pathname === "/main/dashboard"
+                                        ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
+                                        : "text-gray-900 hover:text-red-500"
+                                    }
+                                `}
+                            >
                                 <Home className="w-5 h-5" /> Dashboard
                             </a>
                         </li>
+
                         <li>
-                            <a className="flex items-center gap-2 text-gray-900 hover:text-red-500 font-medium">
+                            <a
+                                className={`
+                                    flex items-center gap-2 font-medium
+                                    ${pathname === "/main/settings"
+                                        ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
+                                        : "text-gray-900 hover:text-red-500"
+                                    }
+                                `}
+                            >
                                 <Settings className="w-5 h-5" /> Settings
                             </a>
                         </li>
 
-                        {/* Sidebar links for admin */}
-                        {user?.role === 'admin' &&
+                        {/* Admin Link */}
+                        {user?.role === 'admin' && (
                             <li>
-                                <a className="flex items-center gap-2 text-gray-900 hover:text-red-500 font-medium">
+                                <a
+                                    className={`
+                                        flex items-center gap-2 font-medium
+                                        ${pathname.includes("/main/admin")
+                                            ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
+                                            : "text-gray-900 hover:text-red-500"
+                                        }
+                                    `}
+                                >
                                     <Home className="w-5 h-5" /> Admin
                                 </a>
                             </li>
-                        }
+                        )}
 
-
-                        {/* Sidebar links for staff */}
-                        {user?.role === 'staff' &&
+                        {/* Staff - Members Link */}
+                        {user?.role === 'staff' && (
                             <li>
-                                <a href='/main/staff/members' className="flex items-center gap-2 text-gray-900 hover:text-red-500 font-medium">
+                                <a
+                                    href='/main/staff/members'
+                                    className={`
+                                        flex items-center gap-2 font-medium
+                                        ${pathname.includes("/main/staff/members")
+                                            ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
+                                            : "text-gray-900 hover:text-red-500"
+                                        }
+                                    `}
+                                >
                                     <Users className="w-5 h-5" /> Members
                                 </a>
                             </li>
-                        }
+                        )}
 
-
-
-                        {/* Sidebar links for members */}
-                        {user?.role === 'member' &&
+                        {/* Member Link */}
+                        {user?.role === 'member' && (
                             <li>
-                                <a className="flex items-center gap-2 text-gray-900 hover:text-red-500 font-medium">
+                                <a
+                                    className={`
+                                        flex items-center gap-2 font-medium
+                                        ${pathname.includes("/main/member")
+                                            ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
+                                            : "text-gray-900 hover:text-red-500"
+                                        }
+                                    `}
+                                >
                                     <Home className="w-5 h-5" /> Member
                                 </a>
                             </li>
-                        }
-
+                        )}
                     </div>
 
-                    {/* Logout at the bottom */}
+                    {/* Logout */}
                     <li>
                         <a
                             onClick={() => {
@@ -119,7 +166,6 @@ const Navigation = () => {
                             <LogOut className="w-5 h-5" /> Logout
                         </a>
                     </li>
-
                 </ul>
             </div>
         </div>

@@ -477,17 +477,15 @@ export default function StaffMembersPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-gray-600">
+                                                    <p className="text-gray-600">
                                                         {new Date(member.createdAt).toLocaleString("en-US", {
                                                             weekday: "long",   // Monday, Tuesday, ...
                                                             year: "numeric",   // 2025
                                                             month: "long",     // November
                                                             day: "numeric",    // 19
-                                                            hour: "2-digit",   // 01, 23
-                                                            minute: "2-digit", // 05, 59
-                                                            hour12: true       // AM/PM
+                                                          
                                                         })}
-                                                    </span>                                                    {member.role === 'member' && (
+                                                    </p>                                                    {member.role === 'member' && (
                                                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${member.activated
                                                             ? 'bg-green-100 text-green-700'
                                                             : 'bg-orange-100 text-orange-700'
