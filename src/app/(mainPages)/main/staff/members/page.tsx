@@ -15,7 +15,7 @@ interface Member {
 }
 
 export default function StaffMembersPage() {
-    const { getMembers, editMembers } = useStaffStore()
+    const { getMembers, editMembers, deleteMembers } = useStaffStore()
 
     const [members, setMembers] = useState<Member[]>([])
     const [currentPage, setCurrentPage] = useState(1)
@@ -135,6 +135,52 @@ export default function StaffMembersPage() {
         }
     }
 
+    const handleDelete = async () => {
+        if (!selectedDetails) return
+
+        // Confirm delete
+        const confirmed = window.confirm(
+            `Are you sure you want to delete "${selectedDetails.username}"? This action cannot be undone.`
+        )
+        if (!confirmed) return
+
+        setIsSaving(true)
+
+        try {
+            const result = await deleteMembers(selectedDetails._id)
+
+            if (result.success) {
+                toast.success("Member deleted successfully!")
+
+                // Remove from UI immediately
+                setMembers(prevMembers =>
+                    prevMembers.filter(member => member._id !== selectedDetails._id)
+                )
+
+                // Adjust statistics
+                if (selectedDetails.activated) {
+                    setTotalActivated(prev => prev - 1)
+                } else {
+                    setTotalInactive(prev => prev - 1)
+                }
+
+                closeModal()
+
+                // Optionally refetch from server
+                // await fetchMembers()
+            } else {
+                toast.error(result.message || "Failed to delete member")
+            }
+
+        } catch (error: any) {
+            console.error("Delete error:", error)
+            toast.error(error.message || "An error occurred while deleting")
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
             <div className="max-w-7xl mx-auto">
@@ -153,7 +199,7 @@ export default function StaffMembersPage() {
                             <form method="dialog">
                                 <button
                                     onClick={() => modal(null, null)}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    className="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
                                     disabled={isSaving}
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -255,7 +301,7 @@ export default function StaffMembersPage() {
                                         <button
                                             onClick={handleEdit}
                                             disabled={isSaving}
-                                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                            className="cursor-pointer flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                         >
                                             {isSaving ? (
                                                 <>
@@ -291,8 +337,8 @@ export default function StaffMembersPage() {
 
                                     <div className="flex gap-2 pt-2">
                                         <button
-                                            onClick={() => console.log('delete')}
-                                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                                            onClick={() => handleDelete()}
+                                            className="cursor-pointer flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
                                         >
                                             Delete Member
                                         </button>

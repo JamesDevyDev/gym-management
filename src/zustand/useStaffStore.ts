@@ -3,6 +3,7 @@ import { create } from 'zustand'
 interface StaffStore {
     getMembers: (page: any) => Promise<any>
     editMembers: (selectedId: any, username: any, email: any, activated: any) => Promise<any>
+    deleteMembers: (selectedId: any) => Promise<any>
 }
 
 const useStaffStore = create<StaffStore>((set, get) => ({
@@ -42,14 +43,48 @@ const useStaffStore = create<StaffStore>((set, get) => ({
 
             return {
                 success: true,
-                message: data.message || 'Member updated successfully',
+                message: data.message || 'Member UPDATED successfully',
+                user: data.user
+            };
+        } catch (error: any) {
+            console.error('Error EDITING member:', error);
+            return {
+                success: false,
+                message: error.message || 'An error occurred while updating member'
+            };
+        }
+    },
+    deleteMembers: async (selectedId: any) => {
+        try {
+            const response = await fetch('/api/staff/deleteMember', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    selectedId,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    message: data.error || 'Failed to DELETE member'
+                };
+            }
+
+            return {
+                success: true,
+                message: data.message || 'Member DELETED successfully',
                 user: data.user
             };
         } catch (error: any) {
             console.error('Error editing member:', error);
             return {
                 success: false,
-                message: error.message || 'An error occurred while updating member'
+                message: error.message || 'An error occurred while DELETING member'
             };
         }
     },

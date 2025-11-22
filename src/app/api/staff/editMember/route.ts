@@ -42,7 +42,7 @@ export const POST = async (req: Request) => {
         // Prevent staff from editing other staff members
         if (user.role === 'staff') {
             return NextResponse.json(
-                { error: "You cannot edit staff members" },
+                { error: "You cannot EDIT staff members" },
                 { status: 403 }
             );
         }
@@ -100,7 +100,7 @@ export const POST = async (req: Request) => {
         );
 
     } catch (error) {
-        console.error("Error editing member:", error);
+        console.error("Error EDITING member:", error);
         return NextResponse.json(
             {
                 error: "Internal Server Error",
