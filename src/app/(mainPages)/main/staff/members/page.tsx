@@ -12,6 +12,7 @@ interface Member {
     activated: boolean;
     createdAt: string;
     pfp?: string;
+    qrCode: string
 }
 
 export default function StaffMembersPage() {
@@ -248,8 +249,28 @@ export default function StaffMembersPage() {
                                             </p>
                                         </div>
                                     </div>
+
+
+                                    {/* If activated it will show qrcode */}
+
+
+                                    {/* Show QR Code only if user is activated AND has a QR code */}
+                                    {selectedDetails.activated && selectedDetails.qrCode && (
+                                        <div className="pt-5 border-t border-gray-200">
+                                            <p className="text-xs text-gray-500 mb-2">QR Code</p>
+                                            <img
+                                                src={selectedDetails.qrCode}
+                                                alt="QR Code"
+                                                className="w-40 h-40 object-contain mx-auto border rounded-lg p-2 bg-white shadow"
+                                            />
+                                        </div>
+                                    )}
+
+
+
                                 </div>
                             )}
+
 
                             {modalView === 'edit' && selectedDetails && (
                                 <div className="space-y-4">
@@ -483,7 +504,7 @@ export default function StaffMembersPage() {
                                                             year: "numeric",   // 2025
                                                             month: "long",     // November
                                                             day: "numeric",    // 19
-                                                          
+
                                                         })}
                                                     </p>                                                    {member.role === 'member' && (
                                                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${member.activated

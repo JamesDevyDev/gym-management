@@ -2,6 +2,7 @@ import connectDb from "@/utils/connectDb"
 import Users from "@/models/User.Model"
 import bcrypt from 'bcrypt'
 import { NextResponse } from "next/server"
+import QRCode from "qrcode"
 
 export const POST = async (request: Request) => {
     await connectDb()
@@ -17,7 +18,7 @@ export const POST = async (request: Request) => {
         return NextResponse.json("Password must be at least 6 characters long.", { status: 400 })
     }
 
-    const ifExist = await Users.findOne({ username: username })
+    const ifExist = await Users.findOne({ username })
     if (ifExist) {
         return NextResponse.json("Username already exists.", { status: 400 })
     }
@@ -25,7 +26,25 @@ export const POST = async (request: Request) => {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
 
-    const newUser = new Users({ username, password: hashedPassword, email })
+    // 1️⃣ Save user FIRST
+    const newUser = new Users({
+        username,
+        password: hashedPassword,
+        email
+    })
+    await newUser.save()
+
+    // 2️⃣ Generate QR that contains the MongoDB ID
+    const qrData = JSON.stringify({
+        id: newUser._id.toString(),
+        username,
+        email
+    })
+
+    const qrCodeBase64 = await QRCode.toDataURL(qrData)
+
+    // 3️⃣ Update user with QR code
+    newUser.qrCode = qrCodeBase64
     await newUser.save()
 
     return NextResponse.json(newUser)

@@ -71,34 +71,7 @@ const Navigation = () => {
                         <div className="divider before:bg-red-300 after:bg-red-300"></div>
 
                         {/* Sidebar Links */}
-                        <li>
-                            <a
-                                className={`
-                                    flex items-center gap-2 font-medium
-                                    ${pathname === "/main/dashboard"
-                                        ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
-                                        : "text-gray-900 hover:text-red-500"
-                                    }
-                                `}
-                            >
-                                <Home className="w-5 h-5" /> Dashboard
-                            </a>
-                        </li>
-
-                        <li>
-                            <a
-                                className={`
-                                    flex items-center gap-2 font-medium
-                                    ${pathname === "/main/settings"
-                                        ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
-                                        : "text-gray-900 hover:text-red-500"
-                                    }
-                                `}
-                            >
-                                <Settings className="w-5 h-5" /> Settings
-                            </a>
-                        </li>
-
+            
                         {/* Admin Link */}
                         {user?.role === 'admin' && (
                             <li>
