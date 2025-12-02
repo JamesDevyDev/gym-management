@@ -1,62 +1,60 @@
-'use client'
+'use client';
 
 import { useEffect, useState } from 'react';
 import { Camera, CheckCircle, XCircle } from 'lucide-react';
 
+
+/* --- END OF LOCAL TYPES --- */
+
+
 function Page() {
-    const [scanResult, setScanResult] = useState(null);
-    const [scanError, setScanError] = useState(null);
-    const [isScanning, setIsScanning] = useState(true);
+    const [scanResult, setScanResult] = useState<string | null>(null);
+    const [scanError, setScanError] = useState<string | null>(null);
+    const [isScanning, setIsScanning] = useState<boolean>(true);
 
     useEffect(() => {
-        let qrCodeScanner;
+        // Fully typed scanner instance
+        let qrCodeScanner: import('html5-qrcode').Html5QrcodeScanner | null = null;
 
         const initScanner = async () => {
             try {
-                // Dynamically import the library
                 const { Html5QrcodeScanner } = await import('html5-qrcode');
-                
+
                 qrCodeScanner = new Html5QrcodeScanner(
-                    "reader",
+                    'reader',
                     {
                         fps: 10,
                         qrbox: { width: 250, height: 250 },
                         aspectRatio: 1.0,
                     },
-                    false
+                    /* verbose = */ false
                 );
 
                 qrCodeScanner.render(onScanSuccess, onScanFailure);
             } catch (error) {
                 console.error('Failed to initialize scanner:', error);
+                setScanError('Camera initialization failed.');
             }
         };
 
-        function onScanSuccess(decodedText, decodedResult) {
+        const onScanSuccess = (decodedText: string) => {
             setScanResult(decodedText);
             setScanError(null);
             setIsScanning(false);
-            
-            // Stop scanning after successful scan
-            if (qrCodeScanner) {
-                qrCodeScanner.clear();
-            }
-        }
 
-        function onScanFailure(error) {
-            // Don't show errors for each frame, only actual failures
-            if (error.includes('NotFoundException')) {
-                return;
-            }
+            if (qrCodeScanner) qrCodeScanner.clear();
+        };
+
+        const onScanFailure = (error: string) => {
+            // Ignore "no QR found" spam
+            if (error.includes('NotFoundException')) return;
             setScanError(error);
-        }
+        };
 
         initScanner();
 
         return () => {
-            if (qrCodeScanner) {
-                qrCodeScanner.clear().catch(console.error);
-            }
+            if (qrCodeScanner) qrCodeScanner.clear().catch(console.error);
         };
     }, []);
 
@@ -64,13 +62,11 @@ function Page() {
         setScanResult(null);
         setScanError(null);
         setIsScanning(true);
-        window.location.reload(); // Simple way to restart scanner
+        window.location.reload(); // simplest reset
     };
 
     const copyToClipboard = () => {
-        if (scanResult) {
-            navigator.clipboard.writeText(scanResult);
-        }
+        if (scanResult) navigator.clipboard.writeText(scanResult);
     };
 
     return (
@@ -82,10 +78,9 @@ function Page() {
                         <Camera className="w-8 h-8 text-white" />
                     </div>
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">QR Code Scanner</h1>
-                    <p className="text-gray-600">Position the QR code within the frame to scan</p>
+                    <p className="text-gray-600">Position the QR code within the frame</p>
                 </div>
 
-                {/* Scanner Container */}
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                     {isScanning && (
                         <div className="p-4">
@@ -93,7 +88,6 @@ function Page() {
                         </div>
                     )}
 
-                    {/* Success Result */}
                     {scanResult && (
                         <div className="p-8">
                             <div className="flex items-center justify-center mb-6">
@@ -104,9 +98,7 @@ function Page() {
                             </h2>
                             <div className="bg-gray-50 rounded-lg p-4 mb-6">
                                 <p className="text-sm text-gray-500 mb-2">Scanned Content:</p>
-                                <p className="text-gray-800 break-all font-mono text-sm">
-                                    {scanResult}
-                                </p>
+                                <p className="text-gray-800 break-all font-mono text-sm">{scanResult}</p>
                             </div>
                             <div className="flex gap-3">
                                 <button
@@ -125,7 +117,6 @@ function Page() {
                         </div>
                     )}
 
-                    {/* Error State */}
                     {scanError && !scanResult && (
                         <div className="p-8">
                             <div className="flex items-center justify-center mb-6">
@@ -145,25 +136,24 @@ function Page() {
                     )}
                 </div>
 
-                {/* Instructions */}
                 <div className="mt-6 bg-white/50 backdrop-blur rounded-xl p-6">
                     <h3 className="font-semibold text-gray-800 mb-3">How to use:</h3>
                     <ul className="space-y-2 text-gray-600 text-sm">
                         <li className="flex items-start">
                             <span className="text-indigo-600 mr-2">•</span>
-                            <span>Allow camera access when prompted</span>
+                            Allow camera access when prompted
                         </li>
                         <li className="flex items-start">
                             <span className="text-indigo-600 mr-2">•</span>
-                            <span>Position the QR code within the scanning frame</span>
+                            Position the QR code within the scanning frame
                         </li>
                         <li className="flex items-start">
                             <span className="text-indigo-600 mr-2">•</span>
-                            <span>Hold steady until the code is detected</span>
+                            Hold steady until the code is detected
                         </li>
                         <li className="flex items-start">
                             <span className="text-indigo-600 mr-2">•</span>
-                            <span>The result will appear automatically</span>
+                            The result will appear automatically
                         </li>
                     </ul>
                 </div>
