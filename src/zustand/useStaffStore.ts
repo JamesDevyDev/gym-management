@@ -4,6 +4,7 @@ interface StaffStore {
     getMembers: (page: any) => Promise<any>
     editMembers: (selectedId: any, username: any, email: any, activated: any) => Promise<any>
     deleteMembers: (selectedId: any) => Promise<any>
+    scanQr: (id: string) => Promise<any>
 }
 
 const useStaffStore = create<StaffStore>((set, get) => ({
@@ -85,6 +86,28 @@ const useStaffStore = create<StaffStore>((set, get) => ({
             return {
                 success: false,
                 message: error.message || 'An error occurred while DELETING member'
+            };
+        }
+    },
+    scanQr: async (id: string) => {
+        try {
+            const response = await fetch('/api/staff/scan-qr', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id }),
+            });
+
+            const data = await response.json();
+
+            return {
+                success: response.ok,
+                message: data.message,
+            };
+        } catch (error: any) {
+            console.error('Error SCANNING QR:', error);
+            return {
+                success: false,
+                message: error.message || 'An error occurred while scanning QR',
             };
         }
     },

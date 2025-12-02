@@ -2,18 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { Camera, CheckCircle, XCircle } from 'lucide-react';
-
+import useStaffStore from '@/zustand/useStaffStore';
 
 /* --- END OF LOCAL TYPES --- */
-
 
 function Page() {
     const [scanResult, setScanResult] = useState<string | null>(null);
     const [scanError, setScanError] = useState<string | null>(null);
     const [isScanning, setIsScanning] = useState<boolean>(true);
+    const [backendMessage, setBackendMessage] = useState<string | null>(null);
+
+    const { scanQr } = useStaffStore();
 
     useEffect(() => {
-        // Fully typed scanner instance
         let qrCodeScanner: import('html5-qrcode').Html5QrcodeScanner | null = null;
 
         const initScanner = async () => {
@@ -27,7 +28,7 @@ function Page() {
                         qrbox: { width: 250, height: 250 },
                         aspectRatio: 1.0,
                     },
-                    /* verbose = */ false
+                    false
                 );
 
                 qrCodeScanner.render(onScanSuccess, onScanFailure);
@@ -37,16 +38,33 @@ function Page() {
             }
         };
 
-        const onScanSuccess = (decodedText: string) => {
+        const onScanSuccess = async (decodedText: string) => {
             setScanResult(decodedText);
             setScanError(null);
             setIsScanning(false);
 
             if (qrCodeScanner) qrCodeScanner.clear();
+
+            try {
+                // Parse QR JSON
+                const data = JSON.parse(decodedText || '{}');
+                if (!data.id) throw new Error('No ID found in QR code');
+
+                // Send to backend using Zustand action
+                const result = await scanQr(data.id);
+
+                if (result.success) {
+                    setBackendMessage(result.message || 'Successfully sent to backend');
+                } else {
+                    setBackendMessage(result.message || 'Backend returned an error');
+                }
+            } catch (err: any) {
+                console.error('Error handling scanned QR:', err.message || err);
+                setScanError(err.message || 'Invalid QR code');
+            }
         };
 
         const onScanFailure = (error: string) => {
-            // Ignore "no QR found" spam
             if (error.includes('NotFoundException')) return;
             setScanError(error);
         };
@@ -56,13 +74,13 @@ function Page() {
         return () => {
             if (qrCodeScanner) qrCodeScanner.clear().catch(console.error);
         };
-    }, []);
+    }, [scanQr]);
 
     const handleScanAgain = () => {
         setScanResult(null);
         setScanError(null);
+        setBackendMessage(null);
         setIsScanning(true);
-        window.location.reload(); // simplest reset
     };
 
     const copyToClipboard = () => {
@@ -96,10 +114,27 @@ function Page() {
                             <h2 className="text-2xl font-semibold text-center text-gray-800 mb-4">
                                 Scan Successful!
                             </h2>
-                            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                                <p className="text-sm text-gray-500 mb-2">Scanned Content:</p>
-                                <p className="text-gray-800 break-all font-mono text-sm">{scanResult}</p>
+
+                            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                <p className="text-sm text-gray-500 mb-2">Scanned QR ID:</p>
+                                <p className="text-gray-800 break-all font-mono text-sm">
+                                    {(() => {
+                                        try {
+                                            const data = JSON.parse(scanResult || '{}');
+                                            return data.id || 'No ID found';
+                                        } catch {
+                                            return 'Invalid JSON';
+                                        }
+                                    })()}
+                                </p>
                             </div>
+
+                            {backendMessage && (
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                                    <p className="text-green-700 text-sm text-center">{backendMessage}</p>
+                                </div>
+                            )}
+
                             <div className="flex gap-3">
                                 <button
                                     onClick={copyToClipboard}
