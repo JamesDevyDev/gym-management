@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from "next/navigation"
 import useAuthStore from "@/zustand/useAuthStore"
-import { Menu, Home, Settings, LogOut, Users } from "lucide-react"
+import { Menu, Home, Camera, LogOut, Users } from "lucide-react"
 
 const Navigation = () => {
     const { getAuthUserFunction, LogoutFunction } = useAuthStore()
@@ -71,7 +71,7 @@ const Navigation = () => {
                         <div className="divider before:bg-red-300 after:bg-red-300"></div>
 
                         {/* Sidebar Links */}
-            
+
                         {/* Admin Link */}
                         {user?.role === 'admin' && (
                             <li>
@@ -89,7 +89,23 @@ const Navigation = () => {
                             </li>
                         )}
 
-                        {/* Staff - Members Link */}
+                        {/* Staff Link */}
+                        {user?.role === 'staff' && (
+                            <li>
+                                <a
+                                    href='/main/staff/scan'
+                                    className={`
+                                        flex items-center gap-2 font-medium
+                                        ${pathname.includes("/main/staff/scan")
+                                            ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
+                                            : "text-gray-900 hover:text-red-500"
+                                        }
+                                    `}
+                                >
+                                    <Camera className="w-5 h-5" /> Scan
+                                </a>
+                            </li>
+                        )}
                         {user?.role === 'staff' && (
                             <li>
                                 <a
@@ -106,22 +122,7 @@ const Navigation = () => {
                                 </a>
                             </li>
                         )}
-                        {user?.role === 'staff' && (
-                            <li>
-                                <a
-                                    href='/main/staff/scan'
-                                    className={`
-                                        flex items-center gap-2 font-medium
-                                        ${pathname.includes("/main/staff/scan")
-                                            ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
-                                            : "text-gray-900 hover:text-red-500"
-                                        }
-                                    `}
-                                >
-                                    <Users className="w-5 h-5" /> Scan
-                                </a>
-                            </li>
-                        )}
+
 
                         {/* Member Link */}
                         {user?.role === 'member' && (

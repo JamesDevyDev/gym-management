@@ -92,9 +92,6 @@ function Page() {
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-4">
-                        <Camera className="w-8 h-8 text-white" />
-                    </div>
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">QR Code Scanner</h1>
                     <p className="text-gray-600">Position the QR code within the frame</p>
                 </div>
@@ -169,28 +166,6 @@ function Page() {
                             </button>
                         </div>
                     )}
-                </div>
-
-                <div className="mt-6 bg-white/50 backdrop-blur rounded-xl p-6">
-                    <h3 className="font-semibold text-gray-800 mb-3">How to use:</h3>
-                    <ul className="space-y-2 text-gray-600 text-sm">
-                        <li className="flex items-start">
-                            <span className="text-indigo-600 mr-2">•</span>
-                            Allow camera access when prompted
-                        </li>
-                        <li className="flex items-start">
-                            <span className="text-indigo-600 mr-2">•</span>
-                            Position the QR code within the scanning frame
-                        </li>
-                        <li className="flex items-start">
-                            <span className="text-indigo-600 mr-2">•</span>
-                            Hold steady until the code is detected
-                        </li>
-                        <li className="flex items-start">
-                            <span className="text-indigo-600 mr-2">•</span>
-                            The result will appear automatically
-                        </li>
-                    </ul>
                 </div>
             </div>
         </div>
