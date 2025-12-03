@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Camera, CheckCircle, XCircle } from 'lucide-react';
 import useStaffStore from '@/zustand/useStaffStore';
-
-/* --- END OF LOCAL TYPES --- */
 
 function Page() {
     const [scanResult, setScanResult] = useState<string | null>(null);
@@ -14,81 +12,109 @@ function Page() {
 
     const { scanQr } = useStaffStore();
 
+    // Keep scanner instance between renders
+    const scannerRef = useRef<any>(null);
+
+    // ---------------------------
+    // Restartable scanner function
+    // ---------------------------
+    const startScanner = async () => {
+        try {
+            const { Html5QrcodeScanner } = await import('html5-qrcode');
+
+            if (scannerRef.current) {
+                await scannerRef.current.clear().catch(() => { });
+            }
+
+            scannerRef.current = new Html5QrcodeScanner(
+                'reader',
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                },
+                false
+            );
+
+            scannerRef.current.render(onScanSuccess, onScanFailure);
+        } catch (error) {
+            console.error('Failed to start scanner:', error);
+            setScanError('Camera failed to start.');
+        }
+    };
+
+    // ---------------------------
+    // On first load
+    // ---------------------------
     useEffect(() => {
-        let qrCodeScanner: import('html5-qrcode').Html5QrcodeScanner | null = null;
-
-        const initScanner = async () => {
-            try {
-                const { Html5QrcodeScanner } = await import('html5-qrcode');
-
-                qrCodeScanner = new Html5QrcodeScanner(
-                    'reader',
-                    {
-                        fps: 10,
-                        qrbox: { width: 250, height: 250 },
-                        aspectRatio: 1.0,
-                    },
-                    false
-                );
-
-                qrCodeScanner.render(onScanSuccess, onScanFailure);
-            } catch (error) {
-                console.error('Failed to initialize scanner:', error);
-                setScanError('Camera initialization failed.');
-            }
-        };
-
-        const onScanSuccess = async (decodedText: string) => {
-            setScanResult(decodedText);
-            setScanError(null);
-            setIsScanning(false);
-
-            if (qrCodeScanner) qrCodeScanner.clear();
-
-            try {
-                // Parse QR JSON
-                const data = JSON.parse(decodedText || '{}');
-                if (!data.id) throw new Error('No ID found in QR code');
-
-                // Send to backend using Zustand action
-                const result = await scanQr(data.id);
-
-                if (result.success) {
-                    setBackendMessage(result.message || 'Successfully sent to backend');
-                } else {
-                    setBackendMessage(result.message || 'Backend returned an error');
-                }
-            } catch (err: any) {
-                console.error('Error handling scanned QR:', err.message || err);
-                setScanError(err.message || 'Invalid QR code');
-            }
-        };
-
-        const onScanFailure = (error: string) => {
-            if (error.includes('NotFoundException')) return;
-            setScanError(error);
-        };
-
-        initScanner();
+        startScanner();
 
         return () => {
-            if (qrCodeScanner) qrCodeScanner.clear().catch(console.error);
+            if (scannerRef.current) {
+                scannerRef.current.clear().catch(() => { });
+            }
         };
-    }, [scanQr]);
+    }, []);
 
-    const handleScanAgain = () => {
+    // ---------------------------
+    // Scan Success
+    // ---------------------------
+    const onScanSuccess = async (decodedText: string) => {
+        setScanResult(decodedText);
+        setScanError(null);
+        setIsScanning(false);
+
+        if (scannerRef.current) {
+            await scannerRef.current.clear().catch(() => { });
+        }
+
+        try {
+            const data = JSON.parse(decodedText || '{}');
+            if (!data.id) throw new Error('No ID found in QR code');
+
+            const result = await scanQr(data.id);
+
+            if (result.success) {
+                setBackendMessage(result.message || 'Successfully logged.');
+            } else {
+                setBackendMessage(result.message || 'Backend returned an error.');
+            }
+        } catch (err: any) {
+            setScanError(err.message || 'Invalid QR code');
+        }
+    };
+
+    // ---------------------------
+    // Scan Failure (ignore minor errors)
+    // ---------------------------
+    const onScanFailure = (error: string) => {
+        if (error.includes('NotFoundException')) return;
+        setScanError(error);
+    };
+
+    // ---------------------------
+    // Scan Again Handler
+    // ---------------------------
+    const handleScanAgain = async () => {
         setScanResult(null);
         setScanError(null);
         setBackendMessage(null);
         setIsScanning(true);
+
+        await startScanner(); // <— Restart scanner 🔥
     };
 
-    const copyToClipboard = () => {
-        if (scanResult) navigator.clipboard.writeText(scanResult);
-    };
+    // Helper: Get parsed JSON
+    const parsed = (() => {
+        try {
+            return scanResult ? JSON.parse(scanResult) : null;
+        } catch {
+            return null;
+        }
+    })();
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
@@ -97,12 +123,15 @@ function Page() {
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+
+                    {/* Scanner Section */}
                     {isScanning && (
                         <div className="p-4">
                             <div id="reader" className="rounded-lg overflow-hidden"></div>
                         </div>
                     )}
 
+                    {/* Success Section */}
                     {scanResult && (
                         <div className="p-8">
                             <div className="flex items-center justify-center mb-6">
@@ -113,17 +142,11 @@ function Page() {
                             </h2>
 
                             <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                                <p className="text-sm text-gray-500 mb-2">Scanned QR ID:</p>
-                                <p className="text-gray-800 break-all font-mono text-sm">
-                                    {(() => {
-                                        try {
-                                            const data = JSON.parse(scanResult || '{}');
-                                            return data.id || 'No ID found';
-                                        } catch {
-                                            return 'Invalid JSON';
-                                        }
-                                    })()}
-                                </p>
+                                <p className="text-sm text-gray-500 mb-2">Scanned ID:</p>
+                                <p className="font-mono">{parsed?.id || '—'}</p>
+
+                                <p className="text-sm text-gray-500 mb-2 mt-4">Username:</p>
+                                <p className="font-mono">{parsed?.username || '—'}</p>
                             </div>
 
                             {backendMessage && (
@@ -134,14 +157,8 @@ function Page() {
 
                             <div className="flex gap-3">
                                 <button
-                                    onClick={copyToClipboard}
-                                    className="flex-1 bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-                                >
-                                    Copy to Clipboard
-                                </button>
-                                <button
                                     onClick={handleScanAgain}
-                                    className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                                    className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300 transition font-medium"
                                 >
                                     Scan Again
                                 </button>
@@ -149,6 +166,7 @@ function Page() {
                         </div>
                     )}
 
+                    {/* Error Section */}
                     {scanError && !scanResult && (
                         <div className="p-8">
                             <div className="flex items-center justify-center mb-6">
@@ -158,14 +176,16 @@ function Page() {
                                 Scan Error
                             </h2>
                             <p className="text-gray-600 text-center mb-6">{scanError}</p>
+
                             <button
                                 onClick={handleScanAgain}
-                                className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                                className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition font-medium"
                             >
                                 Try Again
                             </button>
                         </div>
                     )}
+
                 </div>
             </div>
         </div>

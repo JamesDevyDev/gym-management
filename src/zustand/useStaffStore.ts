@@ -5,6 +5,7 @@ interface StaffStore {
     editMembers: (selectedId: any, username: any, email: any, activated: any) => Promise<any>
     deleteMembers: (selectedId: any) => Promise<any>
     scanQr: (id: string) => Promise<any>
+    getLogs: (page:any) => Promise<any>
 }
 
 const useStaffStore = create<StaffStore>((set, get) => ({
@@ -105,6 +106,21 @@ const useStaffStore = create<StaffStore>((set, get) => ({
             };
         } catch (error: any) {
             console.error('Error SCANNING QR:', error);
+            return {
+                success: false,
+                message: error.message || 'An error occurred while scanning QR',
+            };
+        }
+    },
+    getLogs: async (page:any) => {
+        try {
+            const response = await fetch(`/api/staff/getLogs?page=${page}`);
+
+            const data = await response.json();
+
+            return data  
+        } catch (error: any) {
+            console.error('Error GETTING LOGS:', error);
             return {
                 success: false,
                 message: error.message || 'An error occurred while scanning QR',
