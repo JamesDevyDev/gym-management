@@ -2,10 +2,10 @@ import { create } from 'zustand'
 
 interface StaffStore {
     getMembers: (page: any) => Promise<any>
-    editMembers: (selectedId: any, username: any, email: any, activated: any) => Promise<any>
+    editMembers: (selectedId: any, username: any, email: any, activated: any, expiryDate?: any) => Promise<any>
     deleteMembers: (selectedId: any) => Promise<any>
     scanQr: (id: string) => Promise<any>
-    getLogs: (page:any) => Promise<any>
+    getLogs: (page: any) => Promise<any>
 }
 
 const useStaffStore = create<StaffStore>((set, get) => ({
@@ -19,7 +19,7 @@ const useStaffStore = create<StaffStore>((set, get) => ({
             console.log(error)
         }
     },
-    editMembers: async (selectedId: any, username: any, email: any, activated: any) => {
+    editMembers: async (selectedId: any, username: any, email: any, activated: any, expiryDate: any) => {
         try {
             const response = await fetch('/api/staff/editMember', {
                 method: 'POST',
@@ -31,6 +31,7 @@ const useStaffStore = create<StaffStore>((set, get) => ({
                     username,
                     email,
                     activated,
+                    expiryDate
                 }),
             });
 
@@ -112,13 +113,13 @@ const useStaffStore = create<StaffStore>((set, get) => ({
             };
         }
     },
-    getLogs: async (page:any) => {
+    getLogs: async (page: any) => {
         try {
             const response = await fetch(`/api/staff/getLogs?page=${page}`);
 
             const data = await response.json();
 
-            return data  
+            return data
         } catch (error: any) {
             console.error('Error GETTING LOGS:', error);
             return {

@@ -9,7 +9,6 @@ export const POST = async (req: Request) => {
 
         const authUser = await getAuthenticatedUser();
 
-        // Check if user exists and has staff role
         if (!authUser || authUser?.role !== 'staff') {
             return NextResponse.json(
                 { error: "You are not allowed to do this." },
@@ -18,10 +17,8 @@ export const POST = async (req: Request) => {
         }
 
         const body = await req.json();
+        const { selectedId, username, email, activated, expiryDate } = body;
 
-        const { selectedId, username, email, activated } = body;
-
-        //Validate
         if (!selectedId) {
             return NextResponse.json(
                 { error: "Member ID is required" },
@@ -29,9 +26,7 @@ export const POST = async (req: Request) => {
             );
         }
 
-        // Find the user
         const user = await Users.findById(selectedId);
-
         if (!user) {
             return NextResponse.json(
                 { error: "User not found" },
@@ -39,19 +34,19 @@ export const POST = async (req: Request) => {
             );
         }
 
-        // Prevent staff from editing other staff members
-        if (user.role === 'staff') {
+        // Prevent staff from editing staff accounts
+        if (user.role === "staff") {
             return NextResponse.json(
                 { error: "You cannot EDIT staff members" },
                 { status: 403 }
             );
         }
 
-        // Check if username is being changed and if it's already taken
+        // --- Username Check ---
         if (username && username !== user.username) {
-            const existingUser = await Users.findOne({ 
-                username, 
-                _id: { $ne: selectedId } 
+            const existingUser = await Users.findOne({
+                username,
+                _id: { $ne: selectedId }
             });
 
             if (existingUser) {
@@ -62,11 +57,11 @@ export const POST = async (req: Request) => {
             }
         }
 
-        // Check if email is being changed and if it's already taken
+        // --- Email Check ---
         if (email && email !== user.email) {
-            const existingEmail = await Users.findOne({ 
-                email, 
-                _id: { $ne: selectedId } 
+            const existingEmail = await Users.findOne({
+                email,
+                _id: { $ne: selectedId }
             });
 
             if (existingEmail) {
@@ -77,24 +72,40 @@ export const POST = async (req: Request) => {
             }
         }
 
-        // Update user fields
+        // -----------------------------------------
+        // 🔥 Update user fields INCLUDING expiryDate
+        // -----------------------------------------
         const updateData: any = {};
 
         if (username) updateData.username = username;
         if (email) updateData.email = email;
-        if (activated !== undefined) updateData.activated = activated;
 
-        // Perform the update
+        // When deactivating, REMOVE expiry date
+        if (activated === false) {
+            updateData.activated = false;
+            updateData.expiryDate = null;
+        }
+
+        // When activating, SET expiry date
+        if (activated === true) {
+            updateData.activated = true;
+
+            if (expiryDate) {
+                updateData.expiryDate = new Date(expiryDate);
+            }
+        }
+
+        // Run Update
         const updatedUser = await Users.findByIdAndUpdate(
             selectedId,
             { $set: updateData },
             { new: true, runValidators: true }
-        ).select('-password');
+        ).select("-password");
 
         return NextResponse.json(
-            { 
+            {
                 message: "Member updated successfully",
-                user: updatedUser
+                user: updatedUser,
             },
             { status: 200 }
         );
@@ -104,7 +115,7 @@ export const POST = async (req: Request) => {
         return NextResponse.json(
             {
                 error: "Internal Server Error",
-                details: error instanceof Error ? error.message : String(error)
+                details: error instanceof Error ? error.message : String(error),
             },
             { status: 500 }
         );

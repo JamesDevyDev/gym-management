@@ -2,7 +2,7 @@ import connectDb from "@/utils/connectDb";
 import { getAuthenticatedUser } from "@/utils/verifyUser";
 import { NextResponse } from "next/server";
 import Users from "@/models/User.Model";
-import Logs from "@/models/Logs.Model"; // Import the Logs model
+import Logs from "@/models/Logs.Model";
 
 export const POST = async (req: Request) => {
     try {
@@ -10,16 +10,15 @@ export const POST = async (req: Request) => {
 
         const authUser = await getAuthenticatedUser();
 
-        // Check if user exists and has staff role
-        if (!authUser || authUser?.role !== 'staff') {
+        // Make sure user is a staff
+        if (!authUser || authUser.role !== "staff") {
             return NextResponse.json(
                 { error: "You are not allowed to do this." },
                 { status: 403 }
             );
         }
 
-        const body = await req.json();
-        const { id } = body;
+        const { id } = await req.json();
 
         if (!id) {
             return NextResponse.json(
@@ -28,39 +27,66 @@ export const POST = async (req: Request) => {
             );
         }
 
-        // console.log("Received ID from QR scan:", id);
-        // console.log("The admin who did this is:", authUser._id);
-
         // Find the user whose QR was scanned
         const userInfo = await Users.findById(id);
         if (!userInfo) {
             return NextResponse.json(
-                { message: "User is not found" },
+                { message: "User not found" },
                 { status: 404 }
             );
         }
 
-        // Create a log entry
-        const logEntry = await Logs.create({
-            adminId: authUser._id,  // Staff member who scanned
-            user: id                // User whose QR was scanned
-        });
+        // ❌ If membership already inactive
+        if (!userInfo.activated) {
+            return NextResponse.json(
+                { message: "The user membership expired or no longer exists." },
+                { status: 403 }
+            );
+        }
 
-        // console.log("Log created:", logEntry);
+        // ❗ AUTO-DEACTIVATE IF NO DURATION
+        if (!userInfo.duration || userInfo.duration.trim() === "") {
+            userInfo.activated = false;
+            await userInfo.save();
+
+            return NextResponse.json(
+                { message: "User has no membership duration. Now set to inactive." },
+                { status: 403 }
+            );
+        }
+
+        // ❗ If expiryDate exists — check expiration
+        if (userInfo.expiryDate) {
+            if (new Date() > new Date(userInfo.expiryDate)) {
+                userInfo.activated = false;
+                await userInfo.save();
+
+                return NextResponse.json(
+                    { message: "The user membership is expired." },
+                    { status: 403 }
+                );
+            }
+        }
+
+        // Create log entry
+        const logEntry = await Logs.create({
+            adminId: authUser._id,
+            user: id
+        });
 
         return NextResponse.json(
             {
                 message: "Success",
                 receivedId: id,
                 userInfo: {
-                    name: userInfo.name,
+                    name: userInfo.username,
                     email: userInfo.email
-                    // Add other safe fields you want to return
                 },
                 logId: logEntry._id
             },
             { status: 200 }
         );
+
     } catch (error: any) {
         console.error("POST request failed:", error);
 

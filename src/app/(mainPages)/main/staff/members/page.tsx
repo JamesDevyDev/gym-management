@@ -13,6 +13,7 @@ interface Member {
     createdAt: string;
     pfp?: string;
     qrCode: string
+    duration?: string;
 }
 
 export default function StaffMembersPage() {
@@ -93,8 +94,10 @@ export default function StaffMembersPage() {
                 selectedDetails._id,
                 selectedDetails.username,
                 selectedDetails.email,
-                selectedDetails.activated
-            )
+                selectedDetails.activated,
+                selectedDetails.duration
+            );
+
 
             if (result.success) {
                 toast.success("Member updated successfully!")
@@ -248,14 +251,22 @@ export default function StaffMembersPage() {
                                                 })}
                                             </p>
                                         </div>
+
+                                        {selectedDetails.activated && selectedDetails.duration && (
+                                            <div>
+                                                <p className="text-xs text-gray-500 mb-1">Membership Expires</p>
+                                                <p className="text-sm font-medium text-gray-900">
+                                                    {new Date(selectedDetails.duration).toLocaleDateString("en-US", {
+                                                        year: "numeric",
+                                                        month: "long",
+                                                        day: "numeric"
+                                                    })}
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
 
-
-                                    {/* If activated it will show qrcode */}
-
-
-                                    {/* Show QR Code only if user is activated AND has a QR code */}
-                                    {selectedDetails.activated && selectedDetails.qrCode && (
+                                    {selectedDetails.qrCode && (
                                         <div className="pt-5 border-t border-gray-200">
                                             <p className="text-xs text-gray-500 mb-2">QR Code</p>
                                             <img
@@ -265,9 +276,6 @@ export default function StaffMembersPage() {
                                             />
                                         </div>
                                     )}
-
-
-
                                 </div>
                             )}
 
@@ -317,6 +325,44 @@ export default function StaffMembersPage() {
                                             <option value="inactive">Inactive</option>
                                         </select>
                                     </div>
+
+                                    {selectedDetails.activated && selectedDetails?.duration === "" && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                                Membership Duration
+                                                
+                                            </label>
+                                            <select
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                onChange={(e) => {
+                                                    const months = Number(e.target.value)
+                                                    const expiry = new Date()
+                                                    expiry.setMonth(expiry.getMonth() + months)
+
+                                                    setSelectedDetails({
+                                                        ...selectedDetails,
+                                                        duration: expiry.toISOString()
+                                                    })
+                                                }}
+                                            >
+                                                <option value="1">1 Month</option>
+                                                <option value="2">2 Months</option>
+                                                <option value="3">3 Months</option>
+                                                <option value="6">6 Months</option>
+                                                <option value="12">12 Months</option>
+                                            </select>
+
+                                        </div>
+                                    )}
+
+
+                                    {selectedDetails.duration && (
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Expires: <span className="font-medium text-gray-700">
+                                                {new Date(selectedDetails.duration).toLocaleDateString()}
+                                            </span>
+                                        </p>
+                                    )}
 
                                     <div className="flex gap-2 pt-2">
                                         <button

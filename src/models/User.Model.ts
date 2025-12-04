@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
 
     //For Members
     activated: { type: Boolean, default: false },
+    
     duration: { type: String, default: '' },
 
     qrCode: {
