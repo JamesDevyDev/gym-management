@@ -2,6 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface Member {
     _id: string;
@@ -14,10 +15,11 @@ interface Member {
 
 interface DeleteModalProps {
     member: Member;
-    onDelete?: (memberId: string) => void;
+    deleteMembers: (id: string) => Promise<any>;
+    onSuccess?: () => void;
 }
 
-const DeleteModal = ({ member, onDelete }: DeleteModalProps) => {
+const DeleteModal = ({ member, deleteMembers, onSuccess }: DeleteModalProps) => {
     const modalId = `delete_modal_${member._id}`;
     const [isSaving, setIsSaving] = useState(false);
 
@@ -29,20 +31,34 @@ const DeleteModal = ({ member, onDelete }: DeleteModalProps) => {
     const handleDelete = async () => {
         setIsSaving(true);
 
-        // Call parent's onDelete function if provided
-        if (onDelete) {
-            await onDelete(member._id);
-        }
+        try {
+            const result = await deleteMembers(member._id);
 
-        setIsSaving(false);
-        closeModal();
+            if (result.success) {
+                toast.success("Member deleted successfully!");
+
+                // Call parent's onSuccess callback to refetch data
+                if (onSuccess) {
+                    await onSuccess();
+                }
+
+                closeModal();
+            } else {
+                toast.error(result.message || "Failed to delete member");
+            }
+        } catch (error: any) {
+            console.error("Delete error:", error);
+            toast.error(error.message || "An error occurred while deleting");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
         <>
             {/* OPEN BUTTON */}
             <button
-                className="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                className="cursor-pointer p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
                 onClick={() => (document.getElementById(modalId) as HTMLDialogElement)?.showModal()}
             >
                 <Trash2 className="w-5 h-5" />

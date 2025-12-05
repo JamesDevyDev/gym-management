@@ -2,6 +2,7 @@
 
 import { Pencil } from 'lucide-react';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 interface Member {
     _id: string;
@@ -17,10 +18,11 @@ interface Member {
 
 interface EditModalProps {
     member: Member;
-    onSave?: (updatedMember: Member) => void;
+    editMembers: (id: string, username: string, email: string, activated: boolean, duration?: string) => Promise<any>;
+    onSuccess?: () => void;
 }
 
-const EditModal = ({ member, onSave }: EditModalProps) => {
+const EditModal = ({ member, editMembers, onSuccess }: EditModalProps) => {
     const modalId = `edit_modal_${member._id}`;
 
     const [selectedDetails, setSelectedDetails] = useState<Member>(member);
@@ -32,22 +34,60 @@ const EditModal = ({ member, onSave }: EditModalProps) => {
     };
 
     const handleSave = async () => {
-        setIsSaving(true);
-
-        // Call parent's onSave function if provided
-        if (onSave) {
-            await onSave(selectedDetails);
+        // Frontend validation
+        if (!selectedDetails.username.trim()) {
+            toast.error("Username cannot be empty");
+            return;
         }
 
-        setIsSaving(false);
-        closeModal();
+        if (!selectedDetails.email.trim()) {
+            toast.error("Email cannot be empty");
+            return;
+        }
+
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(selectedDetails.email)) {
+            toast.error("Please enter a valid email address");
+            return;
+        }
+
+        setIsSaving(true);
+
+        try {
+            const result = await editMembers(
+                selectedDetails._id,
+                selectedDetails.username,
+                selectedDetails.email,
+                selectedDetails.activated,
+                selectedDetails.duration
+            );
+
+            if (result.success) {
+                toast.success("Member updated successfully!");
+
+                // Call parent's onSuccess callback to refetch data
+                if (onSuccess) {
+                    await onSuccess();
+                }
+
+                closeModal();
+            } else {
+                toast.error(result.message || "Failed to update member");
+            }
+        } catch (error: any) {
+            console.error("Edit error:", error);
+            toast.error(error.message || "An error occurred while updating");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
         <>
             {/* OPEN MODAL BUTTON */}
             <button
-                className="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                className="cursor-pointer p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
                 onClick={() => (document.getElementById(modalId) as HTMLDialogElement)?.showModal()}
             >
                 <Pencil className="w-5 h-5" />

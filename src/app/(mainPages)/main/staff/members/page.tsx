@@ -2,7 +2,7 @@
 import { Eye, Pencil, Trash2, Users, UserCheck, UserX, ChevronLeft, ChevronRight } from "lucide-react";
 import useStaffStore from "@/zustand/useStaffStore";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast"; // Install: npm install react-hot-toast
+import toast from "react-hot-toast";
 
 import ViewModal from "./ViewModal";
 import EditModal from "./EditModal";
@@ -30,10 +30,6 @@ export default function StaffMembersPage() {
     const [totalActivated, setTotalActivated] = useState(0)
     const [totalInactive, setTotalInactive] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
-    const [isSaving, setIsSaving] = useState(false)
-
-    const [modalView, setModalView] = useState<string | null>(null)
-    const [selectedDetails, setSelectedDetails] = useState<Member | null>(null)
 
     // Fetch members data
     const fetchMembers = async () => {
@@ -55,121 +51,6 @@ export default function StaffMembersPage() {
 
     const nextPage = () => setCurrentPage(currentPage + 1)
     const previousPage = () => setCurrentPage(currentPage - 1)
-
-    // Handle Edit with validation and error handling
-    const handleEdit = async () => {
-        if (!selectedDetails) return
-
-        // Frontend validation
-        if (!selectedDetails.username.trim()) {
-            toast.error("Username cannot be empty")
-            return
-        }
-
-        if (!selectedDetails.email.trim()) {
-            toast.error("Email cannot be empty")
-            return
-        }
-
-        // Email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(selectedDetails.email)) {
-            toast.error("Please enter a valid email address")
-            return
-        }
-
-        setIsSaving(true)
-
-        try {
-            const result = await editMembers(
-                selectedDetails._id,
-                selectedDetails.username,
-                selectedDetails.email,
-                selectedDetails.activated,
-                selectedDetails.duration
-            );
-
-
-            if (result.success) {
-                toast.success("Member updated successfully!")
-
-                // Update local state immediately for instant feedback
-                setMembers(prevMembers =>
-                    prevMembers.map(member =>
-                        member._id === selectedDetails._id
-                            ? { ...member, ...selectedDetails }
-                            : member
-                    )
-                )
-
-                // Update statistics if activation status changed
-                const originalMember = members.find(m => m._id === selectedDetails._id)
-                if (originalMember && originalMember.activated !== selectedDetails.activated) {
-                    if (selectedDetails.activated) {
-                        setTotalActivated(prev => prev + 1)
-                        setTotalInactive(prev => prev - 1)
-                    } else {
-                        setTotalActivated(prev => prev - 1)
-                        setTotalInactive(prev => prev + 1)
-                    }
-                }
-
-
-
-            } else {
-                toast.error(result.message || "Failed to update member")
-            }
-        } catch (error: any) {
-            console.error("Edit error:", error)
-            toast.error(error.message || "An error occurred while updating")
-        } finally {
-            setIsSaving(false)
-        }
-    }
-
-    const handleDelete = async () => {
-        if (!selectedDetails) return
-
-        // Confirm delete
-        const confirmed = window.confirm(
-            `Are you sure you want to delete "${selectedDetails.username}"? This action cannot be undone.`
-        )
-        if (!confirmed) return
-
-        setIsSaving(true)
-
-        try {
-            const result = await deleteMembers(selectedDetails._id)
-
-            if (result.success) {
-                toast.success("Member deleted successfully!")
-
-                // Remove from UI immediately
-                setMembers(prevMembers =>
-                    prevMembers.filter(member => member._id !== selectedDetails._id)
-                )
-
-                // Adjust statistics
-                if (selectedDetails.activated) {
-                    setTotalActivated(prev => prev - 1)
-                } else {
-                    setTotalInactive(prev => prev - 1)
-                }
-
-                // Optionally refetch from server
-                // await fetchMembers()
-            } else {
-                toast.error(result.message || "Failed to delete member")
-            }
-
-        } catch (error: any) {
-            console.error("Delete error:", error)
-            toast.error(error.message || "An error occurred while deleting")
-        } finally {
-            setIsSaving(false)
-        }
-    }
-
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
@@ -303,8 +184,22 @@ export default function StaffMembersPage() {
                                         {/* Right side - Action buttons */}
                                         <div className="flex gap-2 md:ml-auto">
                                             <ViewModal member={member} />
-                                            <EditModal member={member} />
-                                            <DeleteModal member={member} />
+                                            <EditModal
+                                                member={member}
+                                                editMembers={editMembers}
+                                                onSuccess={async () => {
+                                                    // Refetch members after successful edit
+                                                    await fetchMembers();
+                                                }}
+                                            />
+                                            <DeleteModal
+                                                member={member}
+                                                deleteMembers={deleteMembers}
+                                                onSuccess={async () => {
+                                                    // Refetch members after successful delete
+                                                    await fetchMembers();
+                                                }}
+                                            />
                                         </div>
                                     </div>
                                 </div>
