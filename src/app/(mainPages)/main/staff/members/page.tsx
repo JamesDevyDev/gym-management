@@ -4,6 +4,10 @@ import useStaffStore from "@/zustand/useStaffStore";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast"; // Install: npm install react-hot-toast
 
+import ViewModal from "./ViewModal";
+import EditModal from "./EditModal";
+import DeleteModal from "./DeleteModal";
+
 interface Member {
     _id: string;
     username: string;
@@ -51,19 +55,6 @@ export default function StaffMembersPage() {
 
     const nextPage = () => setCurrentPage(currentPage + 1)
     const previousPage = () => setCurrentPage(currentPage - 1)
-
-    const modal = (member: Member | null, action: string | null) => {
-        setModalView(action)
-        setSelectedDetails(member)
-    }
-
-    const closeModal = () => {
-        const dialogElement = document.getElementById('my_modal_3') as HTMLDialogElement
-        dialogElement?.close()
-        setTimeout(() => {
-            modal(null, null)
-        }, 200)
-    }
 
     // Handle Edit with validation and error handling
     const handleEdit = async () => {
@@ -123,11 +114,8 @@ export default function StaffMembersPage() {
                     }
                 }
 
-                closeModal()
 
-                // Optionally refetch data from server to ensure consistency
-                // Uncomment if you want to refresh from backend
-                // await fetchMembers()
+
             } else {
                 toast.error(result.message || "Failed to update member")
             }
@@ -168,8 +156,6 @@ export default function StaffMembersPage() {
                     setTotalInactive(prev => prev - 1)
                 }
 
-                closeModal()
-
                 // Optionally refetch from server
                 // await fetchMembers()
             } else {
@@ -191,230 +177,6 @@ export default function StaffMembersPage() {
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-gray-900 mb-2">Members</h1>
                 </div>
-
-                {/* MODAL */}
-                <dialog id="my_modal_3" className="modal backdrop-blur-sm">
-                    <div className="modal-box max-w-md bg-white shadow-xl rounded-xl border border-gray-100 p-0">
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                                {modalView === 'edit' ? 'Edit Member' : modalView === 'view' ? 'Member Details' : 'Delete Member'}
-                            </h3>
-                            <form method="dialog">
-                                <button
-                                    onClick={() => modal(null, null)}
-                                    className="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
-                                    disabled={isSaving}
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </form>
-                        </div>
-
-                        {/* Content */}
-                        <div className="px-6 py-5">
-                            {modalView === 'view' && selectedDetails && (
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-                                        <img
-                                            src={selectedDetails.pfp}
-                                            alt={selectedDetails.username}
-                                            className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-100"
-                                        />
-                                        <div>
-                                            <p className="font-semibold text-gray-900">{selectedDetails.username}</p>
-                                            <p className="text-sm text-gray-500">{selectedDetails.email}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <div>
-                                            <p className="text-xs text-gray-500 mb-1">Role</p>
-                                            <p className="text-sm font-medium text-gray-900 capitalize">{selectedDetails.role}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 mb-1">Status</p>
-                                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${selectedDetails.activated ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-                                                }`}>
-                                                {selectedDetails.activated ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 mb-1">Registered</p>
-                                            <p className="text-sm font-medium text-gray-900">
-                                                {new Date(selectedDetails.createdAt).toLocaleDateString("en-US", {
-                                                    year: "numeric",
-                                                    month: "long",
-                                                    day: "numeric"
-                                                })}
-                                            </p>
-                                        </div>
-
-                                        {selectedDetails.activated && selectedDetails.duration && (
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1">Membership Expires</p>
-                                                <p className="text-sm font-medium text-gray-900">
-                                                    {new Date(selectedDetails.duration).toLocaleDateString("en-US", {
-                                                        year: "numeric",
-                                                        month: "long",
-                                                        day: "numeric"
-                                                    })}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {selectedDetails.qrCode && (
-                                        <div className="pt-5 border-t border-gray-200">
-                                            <p className="text-xs text-gray-500 mb-2">QR Code</p>
-                                            <img
-                                                src={selectedDetails.qrCode}
-                                                alt="QR Code"
-                                                className="w-40 h-40 object-contain mx-auto border rounded-lg p-2 bg-white shadow"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-
-                            {modalView === 'edit' && selectedDetails && (
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                            Username <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={selectedDetails.username}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
-                                            onChange={(e) => setSelectedDetails({ ...selectedDetails, username: e.target.value })}
-                                            disabled={isSaving}
-                                            placeholder="Enter username"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                            Email <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="email"
-                                            value={selectedDetails.email}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
-                                            onChange={(e) => setSelectedDetails({ ...selectedDetails, email: e.target.value })}
-                                            disabled={isSaving}
-                                            placeholder="Enter email"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
-                                        <select
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
-                                            value={selectedDetails.activated ? 'active' : 'inactive'}
-                                            onChange={(e) => setSelectedDetails({
-                                                ...selectedDetails,
-                                                activated: e.target.value === 'active',
-                                            })}
-                                            disabled={isSaving}
-                                        >
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                        </select>
-                                    </div>
-
-                                    {selectedDetails.activated && selectedDetails?.duration === "" && (
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                                Membership Duration
-                                                
-                                            </label>
-                                            <select
-                                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                                onChange={(e) => {
-                                                    const months = Number(e.target.value)
-                                                    const expiry = new Date()
-                                                    expiry.setMonth(expiry.getMonth() + months)
-
-                                                    setSelectedDetails({
-                                                        ...selectedDetails,
-                                                        duration: expiry.toISOString()
-                                                    })
-                                                }}
-                                            >
-                                                <option value="1">1 Month</option>
-                                                <option value="2">2 Months</option>
-                                                <option value="3">3 Months</option>
-                                                <option value="6">6 Months</option>
-                                                <option value="12">12 Months</option>
-                                            </select>
-
-                                        </div>
-                                    )}
-
-
-                                    {selectedDetails.duration && (
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            Expires: <span className="font-medium text-gray-700">
-                                                {new Date(selectedDetails.duration).toLocaleDateString()}
-                                            </span>
-                                        </p>
-                                    )}
-
-                                    <div className="flex gap-2 pt-2">
-                                        <button
-                                            onClick={handleEdit}
-                                            disabled={isSaving}
-                                            className="cursor-pointer flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                        >
-                                            {isSaving ? (
-                                                <>
-                                                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    Saving...
-                                                </>
-                                            ) : (
-                                                'Save Changes'
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {modalView === 'delete' && selectedDetails && (
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
-                                        <div className="flex-shrink-0">
-                                            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-red-900">This action cannot be undone</p>
-                                            <p className="text-sm text-red-700 mt-0.5">
-                                                Are you sure you want to delete <span className="font-semibold">{selectedDetails.username}</span>?
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-2 pt-2">
-                                        <button
-                                            onClick={() => handleDelete()}
-                                            className="cursor-pointer flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
-                                        >
-                                            Delete Member
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </dialog>
 
                 {/* Statistics Cards */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-6">
@@ -468,193 +230,67 @@ export default function StaffMembersPage() {
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    {/* Desktop Table View */}
-                    <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="bg-gray-50 border-b border-gray-200">
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Profile
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Name
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Email
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Date Registered
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody className="divide-y divide-gray-200">
-                                {isLoading ? (
-                                    // Loading skeleton rows
-                                    Array.from({ length: 5 }).map((_, index) => (
-                                        <tr key={index} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4">
-                                                <div className="skeleton w-12 h-12 rounded-full"></div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="skeleton h-4 w-32"></div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="skeleton h-4 w-48"></div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="skeleton h-4 w-24"></div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex justify-end gap-2">
-                                                    <div className="skeleton h-8 w-8 rounded-lg"></div>
-                                                    <div className="skeleton h-8 w-8 rounded-lg"></div>
-                                                    <div className="skeleton h-8 w-8 rounded-lg"></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    // Actual data rows
-                                    members.map((member, index) => (
-                                        <tr
-                                            key={index}
-                                            className="hover:bg-gray-50 transition-colors duration-150"
-                                        >
-                                            <td className="px-6 py-4">
-                                                <img
-                                                    src={member.pfp}
-                                                    alt={member.username}
-                                                    className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100"
-                                                />
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className="font-semibold text-gray-900">{member.username}</span>
-                                                {member.role === 'staff' && (
-                                                    <span className="ml-2 px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">
-                                                        Staff
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className="text-gray-600">{member.email}</span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2">
-                                                    <p className="text-gray-600">
-                                                        {new Date(member.createdAt).toLocaleString("en-US", {
-                                                            weekday: "long",   // Monday, Tuesday, ...
-                                                            year: "numeric",   // 2025
-                                                            month: "long",     // November
-                                                            day: "numeric",    // 19
-
-                                                        })}
-                                                    </p>                                                    {member.role === 'member' && (
-                                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${member.activated
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : 'bg-orange-100 text-orange-700'
-                                                            }`}>
-                                                            {member.activated ? 'Active' : 'Inactive'}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex justify-end gap-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            modal(member, "view");
-                                                            (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal();
-                                                        }}
-                                                        className="cursor-pointer p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-150"
-                                                        title="View"
-                                                    >
-                                                        <Eye className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            modal(member, 'edit');
-                                                            (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal();
-                                                        }}
-                                                        className="cursor-pointer p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors duration-150"
-                                                        title="Edit"
-                                                    >
-                                                        <Pencil className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            modal(member, 'delete');
-                                                            (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal();
-                                                        }}
-                                                        className="cursor-pointer p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors duration-150"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Mobile Card View */}
-                    <div className="md:hidden divide-y divide-gray-200">
+                    {/* Members List */}
+                    <div className="divide-y divide-gray-200">
                         {isLoading ? (
-                            // Loading skeleton cards
+                            // Loading skeleton
                             Array.from({ length: 5 }).map((_, index) => (
-                                <div key={index} className="p-4">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <div className="skeleton w-12 h-12 rounded-full"></div>
+                                <div key={index} className="p-4 md:p-6">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                        {/* Left side - User info */}
                                         <div className="flex-1 space-y-2">
-                                            <div className="skeleton h-4 w-32"></div>
-                                            <div className="skeleton h-3 w-48"></div>
-                                            <div className="skeleton h-3 w-24"></div>
+                                            <div className="skeleton h-5 w-32"></div>
+                                            <div className="skeleton h-4 w-48"></div>
+                                            <div className="skeleton h-4 w-40"></div>
                                         </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <div className="skeleton flex-1 h-10 rounded-lg"></div>
-                                        <div className="skeleton flex-1 h-10 rounded-lg"></div>
-                                        <div className="skeleton flex-1 h-10 rounded-lg"></div>
+
+                                        {/* Right side - Actions */}
+                                        <div className="flex gap-2 md:ml-auto">
+                                            <div className="skeleton h-10 w-10 rounded-lg"></div>
+                                            <div className="skeleton h-10 w-10 rounded-lg"></div>
+                                            <div className="skeleton h-10 w-10 rounded-lg"></div>
+                                        </div>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            // Actual data cards
-                            members.map((member, index) => (
-                                <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <img
-                                            src={member.pfp}
-                                            alt={member.username}
-                                            className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100"
-                                        />
+                            // Actual member cards
+                            members.map((member) => (
+                                <div
+                                    key={member._id}
+                                    className="p-4 md:p-6 hover:bg-gray-50 transition-colors"
+                                >
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                        {/* Left side - User info */}
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h3 className="font-semibold text-gray-900 truncate">{member.username}</h3>
+                                            {/* Name and role badge */}
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <h3 className="font-semibold text-gray-900 text-base md:text-lg truncate">
+                                                    {member.username}
+                                                </h3>
                                                 {member.role === 'staff' && (
-                                                    <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">
+                                                    <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded-full whitespace-nowrap">
                                                         Staff
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-sm text-gray-600 truncate">{member.email}</p>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <p className="text-xs text-gray-500">
+
+                                            {/* Email */}
+                                            <p className="text-sm text-gray-600 truncate mb-2">
+                                                {member.email}
+                                            </p>
+
+                                            {/* Date and status */}
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="text-xs md:text-sm text-gray-500">
                                                     {new Date(member.createdAt).toLocaleDateString("en-US", {
-                                                        weekday: "long",  // e.g., Tuesday
-                                                        year: "numeric",  // 2025
-                                                        month: "long",    // November
-                                                        day: "numeric",   // 19
+                                                        year: "numeric",
+                                                        month: "long",
+                                                        day: "numeric",
                                                     })}
                                                 </p>
                                                 {member.role === 'member' && (
-                                                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${member.activated
+                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${member.activated
                                                         ? 'bg-green-100 text-green-700'
                                                         : 'bg-orange-100 text-orange-700'
                                                         }`}>
@@ -663,32 +299,13 @@ export default function StaffMembersPage() {
                                                 )}
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => {
-                                                modal(member, 'view');
-                                                (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal();
-                                            }}
-                                            className="flex-1 py-2 px-3 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-sm font-medium">
-                                            View
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                modal(member, 'edit');
-                                                (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal();
-                                            }}
-                                            className="flex-1 py-2 px-3 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors text-sm font-medium">
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                modal(member, 'delete');
-                                                (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal();
-                                            }}
-                                            className="flex-1 py-2 px-3 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors text-sm font-medium">
-                                            Delete
-                                        </button>
+
+                                        {/* Right side - Action buttons */}
+                                        <div className="flex gap-2 md:ml-auto">
+                                            <ViewModal member={member} />
+                                            <EditModal member={member} />
+                                            <DeleteModal member={member} />
+                                        </div>
                                     </div>
                                 </div>
                             ))
