@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 interface StaffStore {
     getMembers: (page: any) => Promise<any>
-    editMembers: (selectedId: any, username: any, email: any, activated: any, duration?: any) => Promise<any>
+    editMembers: (selectedId: any, username: any, email: any, activated: any, duration: any, startTime: any) => Promise<any>
     deleteMembers: (selectedId: any) => Promise<any>
     scanQr: (id: string) => Promise<any>
     getLogs: (page: any) => Promise<any>
@@ -19,7 +19,7 @@ const useStaffStore = create<StaffStore>((set, get) => ({
             console.log(error)
         }
     },
-    editMembers: async (selectedId: any, username: any, email: any, activated: any, duration: any) => {
+    editMembers: async (selectedId: any, username: any, email: any, activated: any, duration: any, startTime: any) => {
         try {
             const response = await fetch('/api/staff/editMember', {
                 method: 'POST',
@@ -31,7 +31,8 @@ const useStaffStore = create<StaffStore>((set, get) => ({
                     username,
                     email,
                     activated,
-                    duration
+                    duration,
+                    startTime
                 }),
             });
 

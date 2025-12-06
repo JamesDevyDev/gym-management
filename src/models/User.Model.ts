@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
     //For Members
     activated: { type: Boolean, default: false },
     
+    startTime: { type: Date, default: null },
     duration: { type: String, default: '' },
 
     qrCode: {

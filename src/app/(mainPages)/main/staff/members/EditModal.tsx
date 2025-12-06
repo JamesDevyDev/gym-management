@@ -18,7 +18,7 @@ interface Member {
 
 interface EditModalProps {
     member: Member;
-    editMembers: (id: string, username: string, email: string, activated: boolean, duration?: string) => Promise<any>;
+    editMembers: (id: string, username: string, email: string, activated: boolean, duration: string, startTime: string) => Promise<any>;
     onSuccess?: () => void;
 }
 
@@ -60,7 +60,8 @@ const EditModal = ({ member, editMembers, onSuccess }: EditModalProps) => {
                 selectedDetails.username,
                 selectedDetails.email,
                 selectedDetails.activated,
-                selectedDetails.duration
+                selectedDetails.duration || '',
+                selectedDetails.startTime || ''
             );
 
             if (result.success) {
@@ -81,6 +82,39 @@ const EditModal = ({ member, editMembers, onSuccess }: EditModalProps) => {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    // Helper to format date for input[type="date"]
+    const formatDateForInput = (dateString?: string) => {
+        if (!dateString) return '';
+        return new Date(dateString).toISOString().split('T')[0];
+    };
+
+    // Helper to update duration when start time changes
+    const handleStartTimeChange = (newStartTime: string) => {
+        if (!newStartTime || !selectedDetails.duration) {
+            setSelectedDetails({ ...selectedDetails, startTime: newStartTime });
+            return;
+        }
+
+        const currentDuration = new Date(selectedDetails.duration);
+        const oldStart = selectedDetails.startTime ? new Date(selectedDetails.startTime) : new Date();
+        const newStart = new Date(newStartTime);
+
+        // Calculate months difference
+        const monthsDiff = 
+            (currentDuration.getFullYear() - oldStart.getFullYear()) * 12 +
+            (currentDuration.getMonth() - oldStart.getMonth());
+
+        // Apply same months difference to new start date
+        const newDuration = new Date(newStart);
+        newDuration.setMonth(newDuration.getMonth() + monthsDiff);
+
+        setSelectedDetails({
+            ...selectedDetails,
+            startTime: newStart.toISOString(),
+            duration: newDuration.toISOString(),
+        });
     };
 
     return (
@@ -150,20 +184,23 @@ const EditModal = ({ member, editMembers, onSuccess }: EditModalProps) => {
                             </select>
                         </div>
 
-                        {/* Only show duration selector when NO duration exists */}
-                        {selectedDetails.activated && !selectedDetails.duration && (
+                        {/* Duration selector - always show when activated */}
+                        {selectedDetails.activated && (
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                                     Membership Duration
                                 </label>
                                 <select
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                                    value="0"
                                     onChange={(e) => {
                                         const months = Number(e.target.value);
                                         if (months === 0) return;
 
-                                        const start = new Date();
-                                        const expiry = new Date();
+                                        const start = selectedDetails.startTime 
+                                            ? new Date(selectedDetails.startTime)
+                                            : new Date();
+                                        const expiry = new Date(start);
                                         expiry.setMonth(expiry.getMonth() + months);
 
                                         setSelectedDetails({
@@ -172,8 +209,11 @@ const EditModal = ({ member, editMembers, onSuccess }: EditModalProps) => {
                                             duration: expiry.toISOString(),
                                         });
                                     }}
+                                    disabled={isSaving}
                                 >
-                                    <option value="0">Select duration</option>
+                                    <option value="0">
+                                        {selectedDetails.duration ? 'Change duration' : 'Select duration'}
+                                    </option>
                                     <option value="1">1 Month</option>
                                     <option value="2">2 Months</option>
                                     <option value="3">3 Months</option>

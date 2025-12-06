@@ -17,9 +17,9 @@ export const POST = async (req: Request) => {
         }
 
         const body = await req.json();
-        const { selectedId, username, email, activated, duration } = body;
+        const { selectedId, username, email, activated, duration, startTime } = body;
 
-        console.log(selectedId, username, email, activated, duration)
+        console.log(selectedId, username, email, activated, duration, startTime)
 
         if (!selectedId) {
             return NextResponse.json(
@@ -75,25 +75,30 @@ export const POST = async (req: Request) => {
         }
 
         // -----------------------------------------
-        // 🔥 Update user fields INCLUDING duration
+        // 🔥 Update user fields INCLUDING duration AND startTime
         // -----------------------------------------
         const updateData: any = {};
 
         if (username) updateData.username = username;
         if (email) updateData.email = email;
 
-        // When deactivating, REMOVE expiry date
+        // When deactivating, REMOVE expiry date and start time
         if (activated === false) {
             updateData.activated = false;
             updateData.duration = null;
+            updateData.startTime = null;
         }
 
-        // When activating, SET expiry date
+        // When activating, SET expiry date and start time
         if (activated === true) {
             updateData.activated = true;
 
             if (duration) {
                 updateData.duration = new Date(duration);
+            }
+            
+            if (startTime) {
+                updateData.startTime = new Date(startTime);
             }
         }
 
