@@ -95,7 +95,7 @@ const Navigation = () => {
                                     href='/main/admin/all-user'
                                     className={`
                                         flex items-center gap-2 font-medium
-                                        ${pathname.includes("/main/admin/staff")
+                                        ${pathname.includes("/main/admin/all-user")
                                             ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
                                             : "text-gray-900 hover:text-red-500"
                                         }
