@@ -3,20 +3,20 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true },
     password: { type: String, required: true },
-    email: { type: String, required: true },
+    email: { type: String },
     role: { type: String, default: 'member' },
 
     //For staffs
+    // NumberOfScans 
+    //ActivatedMembers
+    
 
     //For Members
-    activated: { type: Boolean, default: false },
-    
-    startTime: { type: Date, default: null },
-    duration: { type: String, default: '' },
-
+    activated: { type: Boolean },
+    startTime: { type: Date },
+    duration: { type: String },
     qrCode: {
         type: String,
-        default: null   // this will store the base64 png/image or a URL to your server
     }
 }, { timestamps: true });
 

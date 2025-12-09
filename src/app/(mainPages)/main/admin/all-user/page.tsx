@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react'
 import { Users, UserCheck, UserX, Mail, Calendar, Shield, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import useAdminStore from '@/zustand/useAdminStore'
+import CreateAdminModal from './createStaffModal';
+import DeleteModalStaff from './deleteModalStaff';
 
 interface User {
     _id: string;
@@ -16,7 +18,7 @@ interface User {
 }
 
 const Page = () => {
-    const { getAllUsers } = useAdminStore()
+    const { getAllUsers } = useAdminStore()  // Add deleteMembers here
 
     const [users, setUsers] = useState<User[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -96,22 +98,27 @@ const Page = () => {
                 </div>
 
                 {/* Section Header */}
-                <div className="flex items-center gap-3 mb-6">
-                    {selectedRole === 'staff' ? (
-                        <>
-                            <Shield className="w-6 h-6 text-purple-600" />
-                            <h2 className="text-2xl font-semibold text-gray-800">Staff</h2>
-                        </>
-                    ) : (
-                        <>
-                            <Users className="w-6 h-6 text-blue-600" />
-                            <h2 className="text-2xl font-semibold text-gray-800">Members</h2>
-                        </>
-                    )}
-                    <span className={`${selectedRole === 'staff' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                        } text-sm font-medium px-3 py-1 rounded-full`}>
-                        {totalCount}
-                    </span>
+                <div className="flex items-center justify-between gap-3 mb-6 ">
+                    <div className='flex items-center gap-3'>
+                        {selectedRole === 'staff' ? (
+                            <>
+                                <Shield className="w-6 h-6 text-purple-600" />
+                                <h2 className="text-2xl font-semibold text-gray-800">Staff</h2>
+                            </>
+                        ) : (
+                            <>
+                                <Users className="w-6 h-6 text-blue-600" />
+                                <h2 className="text-2xl font-semibold text-gray-800">Members</h2>
+                            </>
+                        )}
+                        <span className={`${selectedRole === 'staff' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                            } text-sm font-medium px-3 py-1 rounded-full`}>
+                            {totalCount}
+                        </span>
+                    </div>
+                    <div>
+                        <CreateAdminModal onSuccess={fetchUsers} />
+                    </div>
                 </div>
 
                 {/* Search Bar */}
@@ -211,7 +218,7 @@ const Page = () => {
                             ))
                         ) : paginatedUsers.length > 0 ? (
                             paginatedUsers.map((user) => (
-                                <div key={user._id} className="p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                                <div key={user._id} className="p-4 md:p-6 hover:bg-gray-50 transition-colors flex items-center justify-between">
                                     <div className="flex flex-col md:flex-row md:items-center gap-4">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
@@ -225,10 +232,7 @@ const Page = () => {
                                                     {selectedRole === 'staff' ? 'Staff' : 'Member'}
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-gray-600 truncate mb-2 flex items-center gap-2">
-                                                <Mail className="w-4 h-4" />
-                                                {user.email}
-                                            </p>
+
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <p className="text-xs md:text-sm text-gray-500 flex items-center gap-1">
                                                     <Calendar className="w-4 h-4" />
@@ -247,6 +251,8 @@ const Page = () => {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {user?.role === 'staff' && <DeleteModalStaff member={user} onSuccess={fetchUsers} />}
                                 </div>
                             ))
                         ) : (
