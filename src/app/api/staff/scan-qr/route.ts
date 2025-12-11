@@ -2,7 +2,8 @@ import connectDb from "@/utils/connectDb";
 import { getAuthenticatedUser } from "@/utils/verifyUser";
 import { NextResponse } from "next/server";
 import Users from "@/models/User.Model";
-import Logs from "@/models/Logs.Model";
+import StaffLogs from "@/models/StaffLogs.Model";
+import { User } from "lucide-react";
 
 export const POST = async (req: Request) => {
     try {
@@ -17,6 +18,8 @@ export const POST = async (req: Request) => {
                 { status: 403 }
             );
         }
+
+
 
         const { id } = await req.json();
 
@@ -68,8 +71,14 @@ export const POST = async (req: Request) => {
             }
         }
 
+        //LOG +1 into staff scanned
+        const staffThatScan = await Users.findById(authUser?._id)
+        if (!staffThatScan) return NextResponse.json("There's no staff ID")
+        staffThatScan.NumberOfScans = (staffThatScan.NumberOfScans || 0) + 1;
+        await staffThatScan.save();
+
         // Create log entry
-        const logEntry = await Logs.create({
+        const logEntry = await StaffLogs.create({
             adminId: authUser._id,
             user: id
         });

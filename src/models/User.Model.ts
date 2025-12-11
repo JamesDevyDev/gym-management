@@ -7,9 +7,9 @@ const userSchema = new mongoose.Schema({
     role: { type: String, default: 'member' },
 
     //For staffs
-    // NumberOfScans 
+    NumberOfScans: { type: Number },
     //ActivatedMembers
-    
+
 
     //For Members
     activated: { type: Boolean },

@@ -15,6 +15,9 @@ interface User {
     pfp?: string;
     qrCode?: string;
     duration?: string;
+
+    //Staff
+    NumberOfScans: number
 }
 
 const Page = () => {
@@ -234,6 +237,12 @@ const Page = () => {
                                             </div>
 
                                             <div className="flex flex-wrap items-center gap-2">
+                                                {user?.role === 'staff' &&
+                                                    <p className="text-xs md:text-sm text-gray-500 flex items-center gap-1">
+
+                                                        SCAN COUNT : {user?.NumberOfScans ? user?.NumberOfScans : "0"}
+                                                    </p>
+                                                }
                                                 <p className="text-xs md:text-sm text-gray-500 flex items-center gap-1">
                                                     <Calendar className="w-4 h-4" />
                                                     {new Date(user.createdAt).toLocaleDateString("en-US", {

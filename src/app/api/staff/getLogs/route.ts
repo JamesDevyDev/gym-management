@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import Logs from "@/models/Logs.Model";
+import StaffLogs from "@/models/StaffLogs.Model";
 import connectDb from "@/utils/connectDb";
 import Users from "@/models/User.Model";
 
@@ -72,7 +72,7 @@ export const GET = async (req: Request) => {
             };
         }
 
-        // Time range filter (only applies if a date is selected)
+        // Time range filter
         if ((dateFilter || quickFilter === 'today') && (startTime || endTime)) {
             const baseDate = dateFilter ? new Date(dateFilter) : new Date();
 
@@ -91,15 +91,15 @@ export const GET = async (req: Request) => {
             }
         }
 
-        // Calculate skip value for pagination
+        // Pagination
         const skip = (page - 1) * limit;
 
-        // Get total count for pagination
-        const totalLogs = await Logs.countDocuments(query);
+        // Get total count
+        const totalLogs = await StaffLogs.countDocuments(query);
         const totalPages = Math.ceil(totalLogs / limit);
 
-        // Fetch logs with pagination
-        const logs = await Logs.find(query)
+        // Fetch logs
+        const logs = await StaffLogs.find(query)
             .populate("adminId", "username")
             .populate("user", "username")
             .sort({ createdAt: -1 })
@@ -114,7 +114,7 @@ export const GET = async (req: Request) => {
         });
 
     } catch (error) {
-        console.error("Error GET logs:", error);
+        console.error("Error GET StaffLogs:", error);
         return NextResponse.json(
             { error: "Internal Server Error", details: error instanceof Error ? error.message : String(error) },
             { status: 500 }
