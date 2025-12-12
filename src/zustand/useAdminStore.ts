@@ -4,6 +4,7 @@ interface AdminStore {
     getAllUsers: () => Promise<any>
     createStaff: ({ username, password }: { username: any, password: any }) => Promise<any>
     deleteStaff: (selectedId: any) => Promise<any>
+    getAdminLogs: (params: any) => Promise<any>
 }
 
 const useAdminStore = create<AdminStore>((set, get) => ({
@@ -65,7 +66,32 @@ const useAdminStore = create<AdminStore>((set, get) => ({
                 message: error.message || 'An error occurred while DELETING member'
             };
         }
-    }
+    },
+    getAdminLogs: async (params: any) => {
+        try {
+            const response = await fetch(`/api/admin/logs/getAdminLogs?${params}`, {
+                method: 'GET',
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                return {
+                    success: false,
+                    message: data.error || 'Failed to GET Admin Logs'
+                };
+            }
+
+            return {
+                data
+            };
+        } catch (error: any) {
+            console.error('Error getting Admin Logs:', error);
+            return {
+                success: false,
+                message: error.message || 'An error occurred while getting Admin Logs'
+            };
+        }
+    },
+
 }))
 
 export default useAdminStore

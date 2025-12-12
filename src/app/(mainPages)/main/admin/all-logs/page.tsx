@@ -1,6 +1,7 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { Search, Calendar, Clock, Filter, X, ChevronLeft, ChevronRight, FileText, User, Shield, RefreshCw } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Clock, Filter, X, ChevronLeft, ChevronRight, Shield, RefreshCw } from 'lucide-react'
+import useAdminStore from '@/zustand/useAdminStore'
 
 interface AdminLog {
     _id: string
@@ -17,6 +18,9 @@ interface AdminLog {
 }
 
 const AllLogsPage = () => {
+
+    const { getAdminLogs } = useAdminStore()
+
     const [logs, setLogs] = useState<AdminLog[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [currentPage, setCurrentPage] = useState(1)
@@ -46,14 +50,13 @@ const AllLogsPage = () => {
                 ...(actionFilter && { action: actionFilter })
             })
 
-            const response = await fetch(`/api/admin/logs/getAdminLogs?${params}`)
-            const data = await response.json()
-
-            if (data.logs) {
-                setLogs(data.logs)
-                setTotalPages(data.totalPages)
-                setTotalLogs(data.totalLogs)
+            const data = await getAdminLogs(params.toString())
+            if (data.data.logs) {
+                setLogs(data.data.logs)
+                setTotalPages(data.data.totalPages)
+                setTotalLogs(data.data.totalLogs)
             }
+
         } catch (error) {
             console.error('Error fetching logs:', error)
         } finally {
@@ -364,7 +367,7 @@ const AllLogsPage = () => {
                                                                 STAFF : <span className="font-semibold text-gray-900">{log.staffId?.username || 'Unknown'}</span> Edited
                                                             </p>
                                                         }
-                                                
+
                                                         <p className="text-lg font-bold text-gray-900">{log.userId?.username || 'Unknown'}</p>
                                                     </div>
                                                 </div>
