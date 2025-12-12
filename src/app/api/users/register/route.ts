@@ -4,6 +4,9 @@ import bcrypt from 'bcrypt'
 import { NextResponse } from "next/server"
 import QRCode from "qrcode"
 
+//Logs in AdminLogs
+import AdminLogs from "@/models/AdminLogs.Model"
+
 export const POST = async (request: Request) => {
     await connectDb()
 
@@ -47,5 +50,11 @@ export const POST = async (request: Request) => {
     newUser.qrCode = qrCodeBase64
     await newUser.save()
 
+
+    // ADMIN Logs register
+    await AdminLogs.create({
+        userId: newUser._id,
+        action: "User Registered"
+    })
     return NextResponse.json(newUser)
 }

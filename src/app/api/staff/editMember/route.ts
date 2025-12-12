@@ -3,6 +3,10 @@ import { getAuthenticatedUser } from "@/utils/verifyUser";
 import Users from "@/models/User.Model";
 import connectDb from "@/utils/connectDb";
 
+//
+
+import AdminLogs from "@/models/AdminLogs.Model";
+
 export const POST = async (req: Request) => {
     try {
         await connectDb();
@@ -96,7 +100,7 @@ export const POST = async (req: Request) => {
             if (duration) {
                 updateData.duration = new Date(duration);
             }
-            
+
             if (startTime) {
                 updateData.startTime = new Date(startTime);
             }
@@ -108,6 +112,13 @@ export const POST = async (req: Request) => {
             { $set: updateData },
             { new: true, runValidators: true }
         ).select("-password");
+
+        // ADMIN LOGS
+        await AdminLogs.create({
+            userId: updatedUser._id,     // user being edited
+            staffId: authUser._id,       // staff performing action
+            action: "Edited member details"
+        });
 
         return NextResponse.json(
             {

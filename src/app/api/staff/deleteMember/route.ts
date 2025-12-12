@@ -3,6 +3,9 @@ import { getAuthenticatedUser } from "@/utils/verifyUser";
 import Users from "@/models/User.Model";
 import connectDb from "@/utils/connectDb";
 
+//
+import AdminLogs from "@/models/AdminLogs.Model";
+
 export const DELETE = async (req: Request) => {
     try {
         await connectDb();
@@ -47,6 +50,13 @@ export const DELETE = async (req: Request) => {
             );
         }
 
+
+        //Admin Logs
+        await AdminLogs.create({
+            userId: user._id,
+            staffId: authUser._id,
+            action: "Deleted member"
+        });
 
         return NextResponse.json(
             {

@@ -3,7 +3,10 @@ import { getAuthenticatedUser } from "@/utils/verifyUser";
 import { NextResponse } from "next/server";
 import Users from "@/models/User.Model";
 import StaffLogs from "@/models/StaffLogs.Model";
-import { User } from "lucide-react";
+
+//
+
+import AdminLogs from "@/models/AdminLogs.Model";
 
 export const POST = async (req: Request) => {
     try {
@@ -81,6 +84,13 @@ export const POST = async (req: Request) => {
         const logEntry = await StaffLogs.create({
             adminId: authUser._id,
             user: id
+        });
+
+        // AdminLogs
+        await AdminLogs.create({
+            userId: userInfo._id,
+            staffId: authUser._id,
+            action: "Scanned QR"
         });
 
         return NextResponse.json(
