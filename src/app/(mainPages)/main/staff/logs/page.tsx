@@ -293,7 +293,7 @@ const Page = () => {
                                                     </div>
                                                     <div>
                                                         <p className="text-sm text-gray-600">
-                                                            Staff <span className="font-semibold text-gray-900">{log.adminId.username}</span> scanned
+                                                            STAFF : <span className="font-semibold text-gray-900">{log.adminId.username}</span> scanned
                                                         </p>
                                                         <p className="text-lg font-bold text-gray-900">{log.user.username}</p>
                                                     </div>
