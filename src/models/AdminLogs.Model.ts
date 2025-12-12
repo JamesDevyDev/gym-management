@@ -1,12 +1,13 @@
 import mongoose from 'mongoose'
+import '@/models/User.Model'
 
 const AdminLogsSchema = new mongoose.Schema({
     userId: {
-        ref: 'User',
+        ref: 'Users',
         type: mongoose.Schema.Types.ObjectId
     },
     staffId: {
-        ref: 'User',
+        ref: 'Users',
         type: mongoose.Schema.Types.ObjectId
     },
     action: {

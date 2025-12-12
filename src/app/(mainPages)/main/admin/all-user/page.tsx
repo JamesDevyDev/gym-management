@@ -11,6 +11,7 @@ interface User {
     email: string;
     role: string;
     activated: boolean;
+    startTime: Date
     createdAt: string;
     pfp?: string;
     qrCode?: string;
@@ -221,47 +222,98 @@ const Page = () => {
                             ))
                         ) : paginatedUsers.length > 0 ? (
                             paginatedUsers.map((user) => (
-                                <div key={user._id} className="p-4 md:p-6 hover:bg-gray-50 transition-colors flex items-center justify-between">
-                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                <div
+                                    key={user._id}
+                                    className="p-6 hover:bg-gray-50 transition-colors"
+                                >
+                                    <div className="flex items-start justify-between gap-4">
+                                        {/* Left Section - User Info */}
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <h3 className="font-semibold text-gray-900 text-base md:text-lg truncate">
+                                            {/* Username and Role Badge */}
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <h3 className="font-semibold text-gray-900 text-lg truncate">
                                                     {user.username}
                                                 </h3>
-                                                <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${selectedRole === 'staff'
-                                                    ? 'bg-purple-100 text-purple-700'
-                                                    : 'bg-blue-100 text-blue-700'
-                                                    }`}>
+                                                <span
+                                                    className={`px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap ${selectedRole === 'staff'
+                                                        ? 'bg-purple-100 text-purple-700'
+                                                        : 'bg-blue-100 text-blue-700'
+                                                        }`}
+                                                >
                                                     {selectedRole === 'staff' ? 'Staff' : 'Member'}
                                                 </span>
-                                            </div>
-
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                {user?.role === 'staff' &&
-                                                    <p className="text-xs md:text-sm text-gray-500 flex items-center gap-1">
-
-                                                        SCAN COUNT : {user?.NumberOfScans ? user?.NumberOfScans : "0"}
-                                                    </p>
-                                                }
-                                                <p className="text-xs md:text-sm text-gray-500 flex items-center gap-1">
-                                                    <Calendar className="w-4 h-4" />
-                                                    {new Date(user.createdAt).toLocaleDateString("en-US", {
-                                                        year: "numeric",
-                                                        month: "long",
-                                                        day: "numeric",
-                                                    })}
-                                                </p>
-                                                <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${user.activated
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-orange-100 text-orange-700'
-                                                    }`}>
+                                                <span
+                                                    className={`px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap ${user.activated
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-orange-100 text-orange-700'
+                                                        }`}
+                                                >
                                                     {user.activated ? 'Active' : 'Inactive'}
                                                 </span>
                                             </div>
-                                        </div>
-                                    </div>
 
-                                    {user?.role === 'staff' && <DeleteModalStaff member={user} onSuccess={fetchUsers} />}
+                                            {/* User Details */}
+                                            <div className="space-y-2">
+                                                {/* For Staff - Scan Count */}
+                                                {user?.role === 'staff' && (
+                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                        <span className="font-medium">Scan Count:</span>
+                                                        <span className="text-gray-900 font-semibold">
+                                                            {user?.NumberOfScans || 0}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {/* For Members - Start Time */}
+                                                {user?.role === 'member' && user?.activated && user?.startTime && (
+                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                        <span className="font-medium">Start Time:</span>
+                                                        <span className="text-gray-900">
+                                                            {new Date(user.startTime).toLocaleDateString("en-US", {
+                                                                year: "numeric",
+                                                                month: "long",
+                                                                day: "numeric",
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {/* For Members - Duration */}
+                                                {user?.role === 'member' && user?.duration && (
+                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                        <span className="font-medium">Duration:</span>
+                                                        <span className="text-gray-900">
+                                                            {new Date(user.duration).toLocaleDateString("en-US", {
+                                                                year: "numeric",
+                                                                month: "long",
+                                                                day: "numeric",
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {/* Created Date */}
+                                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                    <Calendar className="w-4 h-4" />
+                                                    <span className="font-medium">Created:</span>
+                                                    <span className="text-gray-900">
+                                                        {new Date(user.createdAt).toLocaleDateString("en-US", {
+                                                            year: "numeric",
+                                                            month: "long",
+                                                            day: "numeric",
+                                                        })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Right Section - Actions */}
+                                        {user?.role === 'staff' && (
+                                            <div className="flex-shrink-0">
+                                                <DeleteModalStaff member={user} onSuccess={fetchUsers} />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             ))
                         ) : (
