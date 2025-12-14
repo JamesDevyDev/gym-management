@@ -27,6 +27,7 @@ const EditModal = ({ member, editMembers, onSuccess }: EditModalProps) => {
 
     const [selectedDetails, setSelectedDetails] = useState<Member>(member);
     const [isSaving, setIsSaving] = useState(false);
+    const [monthsInput, setMonthsInput] = useState<string>('');
 
     const closeModal = () => {
         const modal = document.getElementById(modalId) as HTMLDialogElement;
@@ -84,37 +85,25 @@ const EditModal = ({ member, editMembers, onSuccess }: EditModalProps) => {
         }
     };
 
-    // Helper to format date for input[type="date"]
-    const formatDateForInput = (dateString?: string) => {
-        if (!dateString) return '';
-        return new Date(dateString).toISOString().split('T')[0];
-    };
+    const handleMonthsInputChange = (value: string) => {
+        setMonthsInput(value);
+        
+        const months = Number(value);
+        
+        // Only update if it's a valid positive number
+        if (value && months > 0 && !isNaN(months)) {
+            const start = selectedDetails.startTime 
+                ? new Date(selectedDetails.startTime)
+                : new Date();
+            const expiry = new Date(start);
+            expiry.setMonth(expiry.getMonth() + months);
 
-    // Helper to update duration when start time changes
-    const handleStartTimeChange = (newStartTime: string) => {
-        if (!newStartTime || !selectedDetails.duration) {
-            setSelectedDetails({ ...selectedDetails, startTime: newStartTime });
-            return;
+            setSelectedDetails({
+                ...selectedDetails,
+                startTime: start.toISOString(),
+                duration: expiry.toISOString(),
+            });
         }
-
-        const currentDuration = new Date(selectedDetails.duration);
-        const oldStart = selectedDetails.startTime ? new Date(selectedDetails.startTime) : new Date();
-        const newStart = new Date(newStartTime);
-
-        // Calculate months difference
-        const monthsDiff = 
-            (currentDuration.getFullYear() - oldStart.getFullYear()) * 12 +
-            (currentDuration.getMonth() - oldStart.getMonth());
-
-        // Apply same months difference to new start date
-        const newDuration = new Date(newStart);
-        newDuration.setMonth(newDuration.getMonth() + monthsDiff);
-
-        setSelectedDetails({
-            ...selectedDetails,
-            startTime: newStart.toISOString(),
-            duration: newDuration.toISOString(),
-        });
     };
 
     return (
@@ -184,42 +173,21 @@ const EditModal = ({ member, editMembers, onSuccess }: EditModalProps) => {
                             </select>
                         </div>
 
-                        {/* Duration selector - always show when activated */}
+                        {/* Duration input - always show when activated */}
                         {selectedDetails.activated && (
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Membership Duration
+                                    Membership Duration (Months)
                                 </label>
-                                <select
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                                    value="0"
-                                    onChange={(e) => {
-                                        const months = Number(e.target.value);
-                                        if (months === 0) return;
-
-                                        const start = selectedDetails.startTime 
-                                            ? new Date(selectedDetails.startTime)
-                                            : new Date();
-                                        const expiry = new Date(start);
-                                        expiry.setMonth(expiry.getMonth() + months);
-
-                                        setSelectedDetails({
-                                            ...selectedDetails,
-                                            startTime: start.toISOString(),
-                                            duration: expiry.toISOString(),
-                                        });
-                                    }}
+                                <input
+                                    type="number"
+                                    min="1"
+                                    placeholder="Enter number of months"
+                                    value={monthsInput}
+                                    onChange={(e) => handleMonthsInputChange(e.target.value)}
                                     disabled={isSaving}
-                                >
-                                    <option value="0">
-                                        {selectedDetails.duration ? 'Change duration' : 'Select duration'}
-                                    </option>
-                                    <option value="1">1 Month</option>
-                                    <option value="2">2 Months</option>
-                                    <option value="3">3 Months</option>
-                                    <option value="6">6 Months</option>
-                                    <option value="12">12 Months</option>
-                                </select>
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                                />
                             </div>
                         )}
 
