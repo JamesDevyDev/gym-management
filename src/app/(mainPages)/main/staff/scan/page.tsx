@@ -3,17 +3,46 @@
 import { useEffect, useState, useRef } from 'react';
 import { Camera, CheckCircle, XCircle } from 'lucide-react';
 import useStaffStore from '@/zustand/useStaffStore';
+import { useRouter } from 'next/navigation';
+import useAuthStore from '@/zustand/useAuthStore';
 
 function Page() {
+    // ✅ ALL HOOKS MUST BE CALLED FIRST - BEFORE ANY CONDITIONAL RETURNS
+    const { getAuthUserFunction } = useAuthStore();
+    const router = useRouter();
+    const { scanQr } = useStaffStore();
+
+    // Auth state
+    const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    // Scanner state
     const [scanResult, setScanResult] = useState<string | null>(null);
     const [scanError, setScanError] = useState<string | null>(null);
     const [isScanning, setIsScanning] = useState<boolean>(true);
     const [backendMessage, setBackendMessage] = useState<string | null>(null);
 
-    const { scanQr } = useStaffStore();
-
     // Keep scanner instance between renders
     const scannerRef = useRef<any>(null);
+
+    // ---------------------------
+    // Auth Check Effect
+    // ---------------------------
+    useEffect(() => {
+        const checkRole = async () => {
+            const userData: any = await getAuthUserFunction();
+
+            if (!userData || userData.role !== 'staff') {
+                router.replace('/main');
+                return;
+            }
+
+            setUser(userData);
+            setLoading(false);
+        };
+
+        checkRole();
+    }, [router, getAuthUserFunction]);
 
     // ---------------------------
     // Restartable scanner function
@@ -44,17 +73,20 @@ function Page() {
     };
 
     // ---------------------------
-    // On first load
+    // Initialize scanner ONLY after auth passes
     // ---------------------------
     useEffect(() => {
-        startScanner();
+        // Only start scanner if user is authenticated and loading is done
+        if (!loading && user) {
+            startScanner();
+        }
 
         return () => {
             if (scannerRef.current) {
                 scannerRef.current.clear().catch(() => { });
             }
         };
-    }, []);
+    }, [loading, user]);
 
     // ---------------------------
     // Scan Success
@@ -101,7 +133,7 @@ function Page() {
         setBackendMessage(null);
         setIsScanning(true);
 
-        await startScanner(); // <— Restart scanner 🔥
+        await startScanner();
     };
 
     // Helper: Get parsed JSON
@@ -113,6 +145,15 @@ function Page() {
         }
     })();
 
+    // ✅ NOW IT'S SAFE TO DO CONDITIONAL RENDERING (AFTER ALL HOOKS)
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center w-full h-screen bg-gray-100">
+                <p className="text-gray-500 font-semibold">Checking access...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
             <div className="max-w-2xl mx-auto">
@@ -123,7 +164,6 @@ function Page() {
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-
                     {/* Scanner Section */}
                     {isScanning && (
                         <div className="p-4">
@@ -185,7 +225,6 @@ function Page() {
                             </button>
                         </div>
                     )}
-
                 </div>
             </div>
         </div>

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { User, Clock, RefreshCw, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import useStaffStore from '@/zustand/useStaffStore';
+import { useRouter } from 'next/navigation';
+import useAuthStore from '@/zustand/useAuthStore';
 
 interface Log {
     _id: string;
@@ -19,6 +21,16 @@ interface Log {
 }
 
 const Page = () => {
+    // ✅ ALL HOOKS MUST BE CALLED FIRST - BEFORE ANY CONDITIONAL RETURNS
+    const { getAuthUserFunction } = useAuthStore();
+    const router = useRouter();
+    const { getLogs } = useStaffStore();
+
+    // Auth state
+    const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    // Logs state
     const [logs, setLogs] = useState<Log[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalLogs, setTotalLogs] = useState(0);
@@ -33,7 +45,24 @@ const Page = () => {
     const [endTime, setEndTime] = useState('');
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-    const { getLogs } = useStaffStore();
+    // ---------------------------
+    // Auth Check Effect
+    // ---------------------------
+    useEffect(() => {
+        const checkRole = async () => {
+            const userData: any = await getAuthUserFunction();
+
+            if (!userData || userData.role !== 'staff') {
+                router.replace('/main');
+                return;
+            }
+
+            setUser(userData);
+            setLoading(false);
+        };
+
+        checkRole();
+    }, [router, getAuthUserFunction]);
 
     // Fetch logs data
     const fetchLogs = async () => {
@@ -58,12 +87,15 @@ const Page = () => {
     };
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            fetchLogs();
-        }, 300);
+        // Only fetch logs after auth is complete
+        if (!loading && user) {
+            const timer = setTimeout(() => {
+                fetchLogs();
+            }, 300);
 
-        return () => clearTimeout(timer);
-    }, [currentPage, searchTerm, filterDate, quickFilter, startTime, endTime]);
+            return () => clearTimeout(timer);
+        }
+    }, [currentPage, searchTerm, filterDate, quickFilter, startTime, endTime, loading, user]);
 
     const nextPage = () => setCurrentPage(currentPage + 1);
     const previousPage = () => setCurrentPage(currentPage - 1);
@@ -116,6 +148,16 @@ const Page = () => {
         if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
         return formatDateTime(dateString).date;
     };
+
+    // ✅ NOW IT'S SAFE TO DO CONDITIONAL RENDERING (AFTER ALL HOOKS)
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center w-full h-screen bg-gray-100">
+                <p className="text-gray-500 font-semibold">Checking access...</p>
+            </div>
+        );
+    }
+
 
     if (isLoading && logs.length === 0) {
         return (

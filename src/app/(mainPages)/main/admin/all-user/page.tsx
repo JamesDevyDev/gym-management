@@ -5,6 +5,9 @@ import useAdminStore from '@/zustand/useAdminStore'
 import CreateAdminModal from './createStaffModal';
 import DeleteModalStaff from './deleteModalStaff';
 
+import { useRouter } from 'next/navigation'
+import useAuthStore from '@/zustand/useAuthStore'
+
 interface User {
     _id: string;
     username: string;
@@ -22,8 +25,15 @@ interface User {
 }
 
 const Page = () => {
+    const router = useRouter()
     const { getAllUsers } = useAdminStore()  // Add deleteMembers here
+    const { getAuthUserFunction } = useAuthStore()
 
+    // Auth state
+    const [user, setUser] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+
+    //admin state
     const [users, setUsers] = useState<User[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [selectedRole, setSelectedRole] = useState<'staff' | 'member'>('staff')
@@ -31,7 +41,25 @@ const Page = () => {
     const [itemsPerPage] = useState(6)
     const [searchQuery, setSearchQuery] = useState('')
 
-    // Fetch all users
+
+    //Auth check
+    useEffect(() => {
+        const checkRole = async () => {
+            const userData: any = await getAuthUserFunction()
+
+            if (!userData || userData.role !== 'admin') {
+                router.replace('/main')
+                return
+            }
+
+            setUser(userData)
+            setLoading(false)
+        }
+
+        checkRole()
+    }, [router])
+
+    //Fetch all users
     const fetchUsers = async () => {
         setIsLoading(true)
         const data = await getAllUsers()
@@ -50,6 +78,19 @@ const Page = () => {
     useEffect(() => {
         setCurrentPage(1)
     }, [selectedRole, searchQuery])
+
+    
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center w-full h-screen bg-gray-100">
+                <p className="text-gray-500 font-semibold">Checking access...</p>
+            </div>
+        )
+    }
+
+
+
+
 
     // Filter users based on selected role and search query
     const filteredUsers = users.filter(user => {

@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react'
 import { Clock, Filter, X, ChevronLeft, ChevronRight, Shield, RefreshCw } from 'lucide-react'
 import useAdminStore from '@/zustand/useAdminStore'
 
+import { useRouter } from 'next/navigation'
+import useAuthStore from '@/zustand/useAuthStore'
+
 interface AdminLog {
     _id: string
     userId: {
@@ -18,9 +21,16 @@ interface AdminLog {
 }
 
 const AllLogsPage = () => {
-
+    const router = useRouter()
+    const { getAuthUserFunction } = useAuthStore()
     const { getAdminLogs } = useAdminStore()
 
+    // Auth state
+
+    const [user, setUser] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+
+    //admin state
     const [logs, setLogs] = useState<AdminLog[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [currentPage, setCurrentPage] = useState(1)
@@ -35,6 +45,22 @@ const AllLogsPage = () => {
     const [endTime, setEndTime] = useState('')
     const [actionFilter, setActionFilter] = useState('')
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+
+    useEffect(() => {
+        const checkRole = async () => {
+            const userData: any = await getAuthUserFunction()
+
+            if (!userData || userData.role !== 'admin') {
+                router.replace('/main')
+                return
+            }
+
+            setUser(userData)
+            setLoading(false)
+        }
+
+        checkRole()
+    }, [router])
 
     // Fetch logs
     const fetchLogs = async () => {
@@ -71,6 +97,18 @@ const AllLogsPage = () => {
 
         return () => clearTimeout(timer)
     }, [currentPage, searchTerm, filterDate, quickFilter, startTime, endTime, actionFilter])
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center w-full h-screen bg-gray-100">
+                <p className="text-gray-500 font-semibold">Checking access...</p>
+            </div>
+        )
+    }
+
+
+
+
 
     const handleQuickFilter = (filter: string) => {
         setQuickFilter(quickFilter === filter ? '' : filter)

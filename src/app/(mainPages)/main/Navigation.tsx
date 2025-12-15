@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from "next/navigation"
 import useAuthStore from "@/zustand/useAuthStore"
-import { Menu, Home, Camera, LogOut, Users, FileClock, UserStar, } from "lucide-react"
+import { Menu, Home, Camera, LogOut, Users, FileClock, UserStar, BanknoteArrowUp } from "lucide-react"
 
 const Navigation = () => {
     const { getAuthUserFunction, LogoutFunction } = useAuthStore()
@@ -73,8 +73,8 @@ const Navigation = () => {
                         {/* Sidebar Links */}
 
                         {/* Admin Link */}
-                        {user?.role === 'admin' && (
-                            <li>
+                        {user?.role === 'admin' &&
+                            (<li>
                                 <a
                                     href='/main/admin/dashboard'
                                     className={`
@@ -86,9 +86,8 @@ const Navigation = () => {
                                     `}
                                 >
                                     <Home className="w-5 h-5" /> Dashboard
-                                </a>
-                            </li>
-                        )}
+                                </a></li>
+                            )}
                         {user?.role === 'admin' && (
                             <li>
                                 <a
@@ -177,15 +176,32 @@ const Navigation = () => {
                         {user?.role === 'member' && (
                             <li>
                                 <a
+                                    href='/main/member/dashboard'
                                     className={`
                                         flex items-center gap-2 font-medium
-                                        ${pathname.includes("/main/member")
+                                        ${pathname.includes("/main/member/dashboard")
                                             ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
                                             : "text-gray-900 hover:text-red-500"
                                         }
                                     `}
                                 >
-                                    <Home className="w-5 h-5" /> Member
+                                    <Home className="w-5 h-5" /> Dasboard
+                                </a>
+                            </li>
+                        )}
+                        {user?.role === 'member' && (
+                            <li>
+                                <a
+                                    href='/main/member/transaction'
+                                    className={`
+                                        flex items-center gap-2 font-medium
+                                        ${pathname.includes("/main/member/transaction")
+                                            ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
+                                            : "text-gray-900 hover:text-red-500"
+                                        }
+                                    `}
+                                >
+                                    <BanknoteArrowUp className="w-5 h-5" /> Transaction
                                 </a>
                             </li>
                         )}
