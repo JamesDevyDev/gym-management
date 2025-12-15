@@ -2,7 +2,8 @@ import { create } from 'zustand'
 
 interface StaffStore {
     getMembers: (page: any) => Promise<any>
-    editMembers: (selectedId: any, username: any, email: any, activated: any, duration: any, startTime: any) => Promise<any>
+    editMembers: (id: string, username: string, email: string) => Promise<any>
+    updateActivation: (id: string, activated: boolean, duration: string, startTime: string) => Promise<any>
     deleteMembers: (selectedId: any) => Promise<any>
     scanQr: (id: string) => Promise<any>
     getLogs: (page: any) => Promise<any>
@@ -19,7 +20,7 @@ const useStaffStore = create<StaffStore>((set, get) => ({
             console.log(error)
         }
     },
-    editMembers: async (selectedId: any, username: any, email: any, activated: any, duration: any, startTime: any) => {
+    editMembers: async (id: string, username: string, email: string) => {
         try {
             const response = await fetch('/api/staff/editMember', {
                 method: 'POST',
@@ -27,12 +28,9 @@ const useStaffStore = create<StaffStore>((set, get) => ({
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    selectedId,
+                    selectedId: id,
                     username,
                     email,
-                    activated,
-                    duration,
-                    startTime
                 }),
             });
 
@@ -55,6 +53,43 @@ const useStaffStore = create<StaffStore>((set, get) => ({
             return {
                 success: false,
                 message: error.message || 'An error occurred while updating member'
+            };
+        }
+    },
+    updateActivation: async (id: string, activated: boolean, duration: string, startTime: string) => {
+        try {
+            const response = await fetch('/api/staff/updateActivation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    selectedId: id,
+                    activated,
+                    duration,
+                    startTime,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    message: data.error || 'Failed to update activation'
+                };
+            }
+
+            return {
+                success: true,
+                message: data.message || 'Activation updated successfully',
+                user: data.user
+            };
+        } catch (error: any) {
+            console.error('Error updating activation:', error);
+            return {
+                success: false,
+                message: error.message || 'An error occurred while updating activation'
             };
         }
     },

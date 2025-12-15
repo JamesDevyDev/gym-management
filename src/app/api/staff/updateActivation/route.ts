@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/utils/verifyUser";
 import Users from "@/models/User.Model";
@@ -19,9 +18,9 @@ export const POST = async (req: Request) => {
         }
 
         const body = await req.json();
-        const { selectedId, username, email } = body;
+        const { selectedId, activated, duration, startTime } = body;
 
-        console.log(selectedId, username, email);
+        console.log(selectedId, activated, duration, startTime);
 
         if (!selectedId) {
             return NextResponse.json(
@@ -38,49 +37,39 @@ export const POST = async (req: Request) => {
             );
         }
 
-        // Prevent staff from editing staff accounts
+        // Prevent staff from modifying staff accounts
         if (user.role === "staff") {
             return NextResponse.json(
-                { error: "You cannot EDIT staff members" },
+                { error: "You cannot modify staff members" },
                 { status: 403 }
             );
         }
 
-        // --- Username Check ---
-        if (username && username !== user.username) {
-            const existingUser = await Users.findOne({
-                username,
-                _id: { $ne: selectedId }
-            });
-
-            if (existingUser) {
-                return NextResponse.json(
-                    { error: "Username is already taken" },
-                    { status: 409 }
-                );
-            }
-        }
-
-        // --- Email Check ---
-        if (email && email !== user.email) {
-            const existingEmail = await Users.findOne({
-                email,
-                _id: { $ne: selectedId }
-            });
-
-            if (existingEmail) {
-                return NextResponse.json(
-                    { error: "Email is already taken" },
-                    { status: 409 }
-                );
-            }
-        }
-
-        // Update only username and email
         const updateData: any = {};
 
-        if (username) updateData.username = username;
-        if (email) updateData.email = email;
+        // When deactivating, REMOVE expiry date and start time
+        if (activated === false) {
+            updateData.activated = false;
+            updateData.duration = null;
+            updateData.startTime = null;
+        }
+
+        // When activating, SET expiry date and start time
+        if (activated === true) {
+            if (!duration) {
+                return NextResponse.json(
+                    { error: "Duration is required when activating member" },
+                    { status: 400 }
+                );
+            }
+
+            updateData.activated = true;
+            updateData.duration = new Date(duration);
+            
+            if (startTime) {
+                updateData.startTime = new Date(startTime);
+            }
+        }
 
         // Run Update
         const updatedUser = await Users.findByIdAndUpdate(
@@ -90,22 +79,26 @@ export const POST = async (req: Request) => {
         ).select("-password");
 
         // ADMIN LOGS
+        const action = activated 
+            ? `Activated member (expires: ${new Date(duration).toLocaleDateString()})`
+            : "Deactivated member";
+
         await AdminLogs.create({
             userId: updatedUser._id,     // user being edited
             staffId: authUser._id,       // staff performing action
-            action: "Edited member details (username/email)"
+            action: action
         });
 
         return NextResponse.json(
             {
-                message: "Member updated successfully",
+                message: "Activation status updated successfully",
                 user: updatedUser,
             },
             { status: 200 }
         );
 
     } catch (error) {
-        console.error("Error EDITING member:", error);
+        console.error("Error updating activation:", error);
         return NextResponse.json(
             {
                 error: "Internal Server Error",
