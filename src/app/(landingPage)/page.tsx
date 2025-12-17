@@ -42,12 +42,16 @@ export default function GymLandingPage() {
         { name: 'Monthly', price: '800PHP', features: ['30 Days Gym Pass'] },
         {
             name: '3 Months',
-            price: '1900PHP',
+            price: '2,500 PHP',
             popular: true,
             features: ['90 Days Gym Pass', 'Unlimited Water Refill', 'Own Locker Area'],
         },
-        { name: 'Membership', price: '500PHP', features: ['1 Year membership'] },
-    ];
+        {
+            name: '12 Months',
+            price: '9,000 PHP',
+            popular: true,
+            features: ['90 Days Gym Pass', 'Unlimited Water Refill', 'Own Locker Area'],
+        },];
 
     return (
         <div className="min-h-screen bg-gray-50">
