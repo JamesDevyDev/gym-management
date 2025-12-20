@@ -18,7 +18,7 @@ interface Member {
 
 interface ActivationModalProps {
     member: Member;
-    updateActivation: (id: string, activated: boolean, duration: string, startTime: string) => Promise<any>;
+    updateActivation: (id: string, activated: boolean, duration: string, startTime: string, amount: number, paymentMethod: string) => Promise<any>;
     onSuccess?: () => void;
 }
 
@@ -29,6 +29,8 @@ const ActivationModal = ({ member, updateActivation, onSuccess }: ActivationModa
     const [monthsInput, setMonthsInput] = useState<string>('');
     const [duration, setDuration] = useState(member.duration || '');
     const [startTime, setStartTime] = useState(member.startTime || '');
+    const [amount, setAmount] = useState<string>('');
+    const [paymentMethod, setPaymentMethod] = useState<string>('cash');
     const [isSaving, setIsSaving] = useState(false);
 
     const closeModal = () => {
@@ -37,9 +39,19 @@ const ActivationModal = ({ member, updateActivation, onSuccess }: ActivationModa
     };
 
     const handleSave = async () => {
-        // If activating, require duration to be set
+        // If activating, require duration and amount
         if (activated && !duration) {
             toast.error("Please set membership duration");
+            return;
+        }
+
+        if (activated && !amount) {
+            toast.error("Please enter payment amount");
+            return;
+        }
+
+        if (activated && Number(amount) <= 0) {
+            toast.error("Amount must be greater than 0");
             return;
         }
 
@@ -50,7 +62,9 @@ const ActivationModal = ({ member, updateActivation, onSuccess }: ActivationModa
                 member._id,
                 activated,
                 duration || '',
-                startTime || ''
+                startTime || '',
+                Number(amount) || 0,
+                paymentMethod
             );
 
             if (result.success) {
@@ -94,11 +108,13 @@ const ActivationModal = ({ member, updateActivation, onSuccess }: ActivationModa
     const handleActivationChange = (newActivated: boolean) => {
         setActivated(newActivated);
         
-        // If deactivating, clear duration and startTime
+        // If deactivating, clear all fields
         if (!newActivated) {
             setDuration('');
             setStartTime('');
             setMonthsInput('');
+            setAmount('');
+            setPaymentMethod('cash');
         }
     };
 
@@ -147,23 +163,61 @@ const ActivationModal = ({ member, updateActivation, onSuccess }: ActivationModa
 
                         {/* Duration input - show when activated */}
                         {activated && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Membership Duration (Months) <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    placeholder="Enter number of months"
-                                    value={monthsInput}
-                                    onChange={(e) => handleMonthsInputChange(e.target.value)}
-                                    disabled={isSaving}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Set how many months this membership should last
-                                </p>
-                            </div>
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                        Membership Duration (Months) <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        placeholder="Enter number of months"
+                                        value={monthsInput}
+                                        onChange={(e) => handleMonthsInputChange(e.target.value)}
+                                        disabled={isSaving}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Set how many months this membership should last
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                        Payment Amount (₱) <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="Enter amount"
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
+                                        disabled={isSaving}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Enter the payment amount for this membership
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                        Payment Method
+                                    </label>
+                                    <select
+                                        value={paymentMethod}
+                                        onChange={(e) => setPaymentMethod(e.target.value)}
+                                        disabled={isSaving}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                                    >
+                                        <option value="cash">Cash</option>
+                                        <option value="gcash">GCash</option>
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="card">Card</option>
+                                    </select>
+                                </div>
+                            </>
                         )}
 
                         {/* Show membership info once duration exists */}
@@ -183,6 +237,14 @@ const ActivationModal = ({ member, updateActivation, onSuccess }: ActivationModa
                                         {new Date(duration).toLocaleDateString()}
                                     </span>
                                 </p>
+                                {amount && (
+                                    <p className="text-xs text-gray-500">
+                                        Amount:{" "}
+                                        <span className="font-medium">
+                                            ₱{Number(amount).toLocaleString()}
+                                        </span>
+                                    </p>
+                                )}
                             </div>
                         )}
 

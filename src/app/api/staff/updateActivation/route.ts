@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/utils/verifyUser";
 import Users from "@/models/User.Model";
+import TransactionUser from "@/models/TransactionUserModel";
 import connectDb from "@/utils/connectDb";
 import AdminLogs from "@/models/AdminLogs.Model";
 
@@ -18,9 +19,9 @@ export const POST = async (req: Request) => {
         }
 
         const body = await req.json();
-        const { selectedId, activated, duration, startTime } = body;
+        const { selectedId, activated, duration, startTime, amount, paymentMethod } = body;
 
-        console.log(selectedId, activated, duration, startTime);
+        console.log(selectedId, activated, duration, startTime, amount, paymentMethod);
 
         if (!selectedId) {
             return NextResponse.json(
@@ -63,12 +64,44 @@ export const POST = async (req: Request) => {
                 );
             }
 
+            if (!amount) {
+                return NextResponse.json(
+                    { error: "Amount is required when activating member" },
+                    { status: 400 }
+                );
+            }
+
             updateData.activated = true;
             updateData.duration = new Date(duration);
             
-            if (startTime) {
-                updateData.startTime = new Date(startTime);
-            }
+            const parsedStartTime = startTime ? new Date(startTime) : new Date();
+            updateData.startTime = parsedStartTime;
+
+            // Calculate membership duration in months
+            const durationDate = new Date(duration);
+            const monthsDiff = Math.round(
+                (durationDate.getTime() - parsedStartTime.getTime()) / (1000 * 60 * 60 * 24 * 30)
+            );
+
+            // Generate unique reference number
+            const year = new Date().getFullYear();
+            const month = String(new Date().getMonth() + 1).padStart(2, '0');
+            const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            const reference = `MEM-${year}-${month}-${randomNum}`;
+
+            // Create transaction record
+            await TransactionUser.create({
+                userId: selectedId,
+                staffId: authUser._id,
+                membershipDuration: monthsDiff,
+                amount: amount,
+                paymentDate: new Date(),
+                startTime: parsedStartTime,
+                expiryDate: durationDate,
+                reference: reference,
+                paymentMethod: paymentMethod || 'cash',
+                notes: `Membership activated by ${authUser.name}`
+            });
         }
 
         // Run Update
@@ -80,12 +113,12 @@ export const POST = async (req: Request) => {
 
         // ADMIN LOGS
         const action = activated 
-            ? `Activated member (expires: ${new Date(duration).toLocaleDateString()})`
+            ? `Activated member (expires: ${new Date(duration).toLocaleDateString()}, amount: ₱${amount})`
             : "Deactivated member";
 
         await AdminLogs.create({
-            userId: updatedUser._id,     // user being edited
-            staffId: authUser._id,       // staff performing action
+            userId: updatedUser._id,
+            staffId: authUser._id,
             action: action
         });
 

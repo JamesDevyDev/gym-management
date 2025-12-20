@@ -3,7 +3,7 @@ import { create } from 'zustand'
 interface StaffStore {
     getMembers: (page: any) => Promise<any>
     editMembers: (id: string, username: string, email: string) => Promise<any>
-    updateActivation: (id: string, activated: boolean, duration: string, startTime: string) => Promise<any>
+    updateActivation: (id: string, activated: boolean, duration: string, startTime: string, amount: number, paymentMethod: string) => Promise<any>
     deleteMembers: (selectedId: any) => Promise<any>
     scanQr: (id: string) => Promise<any>
     getLogs: (page: any) => Promise<any>
@@ -56,7 +56,7 @@ const useStaffStore = create<StaffStore>((set, get) => ({
             };
         }
     },
-    updateActivation: async (id: string, activated: boolean, duration: string, startTime: string) => {
+    updateActivation: async (id: string, activated: boolean, duration: string, startTime: string, amount: number, paymentMethod: string) => {
         try {
             const response = await fetch('/api/staff/updateActivation', {
                 method: 'POST',
@@ -68,6 +68,8 @@ const useStaffStore = create<StaffStore>((set, get) => ({
                     activated,
                     duration,
                     startTime,
+                    amount,
+                    paymentMethod,
                 }),
             });
 
