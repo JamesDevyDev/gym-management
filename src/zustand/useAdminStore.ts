@@ -5,6 +5,7 @@ interface AdminStore {
     createStaff: ({ username, password }: { username: any, password: any }) => Promise<any>
     deleteStaff: (selectedId: any) => Promise<any>
     getAdminLogs: (params: any) => Promise<any>
+    getDashboardInfo: () => Promise<any>
 }
 
 const useAdminStore = create<AdminStore>((set, get) => ({
@@ -91,7 +92,16 @@ const useAdminStore = create<AdminStore>((set, get) => ({
             };
         }
     },
-
+    getDashboardInfo: async () => {
+        try {
+            const res = await fetch(`/api/admin/getDashboardInfo`)
+            if (!res.ok) return { error: 'something wrong with AdminStore/getDashboardInfo' }
+            const data = await res.json()
+            return data
+        } catch (error) {
+            console.log(error)
+        }
+    }
 }))
 
 export default useAdminStore

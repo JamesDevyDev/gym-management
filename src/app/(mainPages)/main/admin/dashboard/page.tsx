@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useAuthStore from '@/zustand/useAuthStore'
+import useAdminStore from '@/zustand/useAdminStore'
 
 interface Transaction {
     _id: string
@@ -49,8 +50,10 @@ interface MonthlyAnalytics {
 }
 
 const Dashboard = () => {
-    const { getAuthUserFunction } = useAuthStore()
     const router = useRouter()
+    const { getAuthUserFunction } = useAuthStore()
+    const { getDashboardInfo } = useAdminStore()
+
     const [user, setUser] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
@@ -90,13 +93,12 @@ const Dashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
-            const response = await fetch('/api/admin/getDashboardInfo')
-            if (response.ok) {
-                const data = await response.json()
-                setTransactions(data.transactions)
-                setUserStats(data.userStats)
-                calculateAnalytics(data.transactions)
-            }
+            const data = await getDashboardInfo()
+
+            setTransactions(data.transactions)
+            setUserStats(data.userStats)
+            calculateAnalytics(data.transactions)
+
         } catch (error) {
             console.error('Error fetching dashboard data:', error)
         }
