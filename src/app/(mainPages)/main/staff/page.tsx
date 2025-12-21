@@ -15,6 +15,7 @@ const Staff = () => {
             if (!user || user.role !== 'staff') {
                 router.replace('/main')
             } else {
+                router.replace('/main/staff/members')
                 setLoading(false)
             }
         }
@@ -30,8 +31,8 @@ const Staff = () => {
     }
 
     return (
-        <div className='bg-red-500 w-full h-screen flex items-center justify-center text-white text-2xl'>
-            Staff page
+        <div className=' w-full h-screen flex items-center justify-center text-white text-2xl'>
+            STAFF PAGE
         </div>
     )
 }

@@ -125,6 +125,22 @@ const Navigation = () => {
                         {user?.role === 'staff' && (
                             <li>
                                 <a
+                                    href='/main/staff/members'
+                                    className={`
+                                        flex items-center gap-2 font-medium
+                                        ${pathname.includes("/main/staff/members")
+                                            ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
+                                            : "text-gray-900 hover:text-red-500"
+                                        }
+                                    `}
+                                >
+                                    <Users className="w-5 h-5" /> Members
+                                </a>
+                            </li>
+                        )}
+                        {user?.role === 'staff' && (
+                            <li>
+                                <a
                                     href='/main/staff/scan'
                                     className={`
                                         flex items-center gap-2 font-medium
@@ -154,22 +170,7 @@ const Navigation = () => {
                                 </a>
                             </li>
                         )}
-                        {user?.role === 'staff' && (
-                            <li>
-                                <a
-                                    href='/main/staff/members'
-                                    className={`
-                                        flex items-center gap-2 font-medium
-                                        ${pathname.includes("/main/staff/members")
-                                            ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
-                                            : "text-gray-900 hover:text-red-500"
-                                        }
-                                    `}
-                                >
-                                    <Users className="w-5 h-5" /> Members
-                                </a>
-                            </li>
-                        )}
+                       
 
 
                         {/* Member Link */}

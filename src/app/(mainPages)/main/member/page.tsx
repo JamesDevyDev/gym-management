@@ -206,6 +206,7 @@ const Member = () => {
             if (!user || user.role !== 'member') {
                 router.replace('/main')
             } else {
+                router.replace('/main/member/dashboard')
                 setLoading(false)
             }
         }
@@ -221,8 +222,8 @@ const Member = () => {
     }
 
     return (
-        <div className='bg-red-500 w-full h-screen flex items-center justify-center text-white text-2xl'>
-            Member page
+        <div className=' w-full h-screen flex items-center justify-center text-white text-2xl'>
+            MEMBER PAGE
         </div>
     )
 }

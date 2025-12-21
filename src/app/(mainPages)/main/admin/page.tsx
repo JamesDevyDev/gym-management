@@ -15,6 +15,7 @@ const Admin = () => {
             if (!user || user.role !== 'admin') {
                 router.replace('/main')
             } else {
+                router.replace('/main/admin/dashboard')
                 setLoading(false)
             }
         }
@@ -30,8 +31,8 @@ const Admin = () => {
     }
 
     return (
-        <div className='bg-red-500 w-full h-screen flex items-center justify-center text-white text-2xl'>
-            Admin page
+        <div className=' w-full h-screen flex items-center justify-center text-white text-2xl'>
+            ADMIN PAGE
         </div>
     )
 }
