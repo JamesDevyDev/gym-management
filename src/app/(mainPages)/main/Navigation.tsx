@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from "next/navigation"
 import useAuthStore from "@/zustand/useAuthStore"
-import { Menu, Home, Camera, LogOut, Users, FileClock, UserStar, BanknoteArrowUp } from "lucide-react"
+import { Menu, Home, Camera, LogOut, Users, FileClock, UserStar, BanknoteArrowUp, NotepadText } from "lucide-react"
 
 const Navigation = () => {
     const { getAuthUserFunction, LogoutFunction } = useAuthStore()
@@ -187,6 +187,22 @@ const Navigation = () => {
                                     `}
                                 >
                                     <Home className="w-5 h-5" /> Dasboard
+                                </a>
+                            </li>
+                        )}
+                        {user?.role === 'member' && (
+                            <li>
+                                <a
+                                    href='/main/member/attendance'
+                                    className={`
+                                        flex items-center gap-2 font-medium
+                                        ${pathname.includes("/main/member/attendance")
+                                            ? "text-red-500 font-semibold bg-red-100 border-l-4 border-red-500"
+                                            : "text-gray-900 hover:text-red-500"
+                                        }
+                                    `}
+                                >
+                                    <NotepadText className="w-5 h-5" /> Attendance
                                 </a>
                             </li>
                         )}

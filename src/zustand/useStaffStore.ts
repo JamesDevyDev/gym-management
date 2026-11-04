@@ -1,7 +1,10 @@
 import { create } from 'zustand'
 
 interface StaffStore {
-    getMembers: (page: any) => Promise<any>
+    getMembers: (
+        page: number,
+        filters?: { search?: string; status?: string; sort?: string }
+    ) => Promise<any>
     editMembers: (id: string, username: string, email: string) => Promise<any>
     updateActivation: (id: string, activated: boolean, duration: string, startTime: string, amount: number, paymentMethod: string) => Promise<any>
     deleteMembers: (selectedId: any) => Promise<any>
@@ -10,9 +13,17 @@ interface StaffStore {
 }
 
 const useStaffStore = create<StaffStore>((set, get) => ({
-    getMembers: async (page: any) => {
+    getMembers: async (
+        page: number,
+        filters: { search?: string; status?: string; sort?: string } = {}
+    ) => {
         try {
-            const res = await fetch(`/api/staff/getMembers?page=${page}`)
+            const params = new URLSearchParams({ page: String(page) })
+            if (filters.search) params.set('search', filters.search)
+            if (filters.status) params.set('status', filters.status)
+            if (filters.sort) params.set('sort', filters.sort)
+
+            const res = await fetch(`/api/staff/getMembers?${params}`)
             if (!res.ok) return { error: 'something wrong with StaffStore/getMembers' }
             const data = await res.json()
             return data

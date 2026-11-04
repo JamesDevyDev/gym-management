@@ -3,13 +3,19 @@ import { getAuthenticatedUser } from "@/utils/verifyUser";
 import Users from "@/models/User.Model";
 import connectDb from "@/utils/connectDb";
 
+const SORTS: Record<string, any> = {
+    newest: { createdAt: -1 },
+    oldest: { createdAt: 1 },
+    name_asc: { username: 1 },
+    name_desc: { username: -1 },
+};
+
 export const GET = async (req: Request) => {
     try {
         await connectDb();
 
         const authUser = await getAuthenticatedUser();
 
-        // Check if user exists and has staff role
         if (!authUser || authUser?.role !== 'staff') {
             return NextResponse.json(
                 { error: "You are not allowed to do this." },
@@ -18,27 +24,43 @@ export const GET = async (req: Request) => {
         }
 
         const { searchParams } = new URL(req.url);
-        const page = Number(searchParams.get("page")) || 1;
+        const page = Math.max(Number(searchParams.get("page")) || 1, 1);
+        const search = (searchParams.get("search") || "").trim();
+        const status = searchParams.get("status") || "all"; // all | active | inactive
+        const sort = searchParams.get("sort") || "newest";
 
         const limit = 10;
         const skip = (page - 1) * limit;
 
-        // Total members
+        // Build the filter
+        const filter: any = { role: "member" };
+
+        if (search) {
+            // Escape regex characters so "a+b" or "(" can't break the query
+            const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            filter.$or = [
+                { username: { $regex: escaped, $options: "i" } },
+                { email: { $regex: escaped, $options: "i" } },
+            ];
+        }
+
+        if (status === "active") filter.activated = true;
+        else if (status === "inactive") filter.activated = { $ne: true };
+
+        // Global stats (unfiltered, for the cards)
         const totalMembers = await Users.countDocuments({ role: "member" });
-
-        // Total activated members
         const totalActivated = await Users.countDocuments({ role: "member", activated: true });
-
-        // Total inactive members
         const totalInactive = totalMembers - totalActivated;
 
-        // Fetch paginated members
-        const members = await Users.find({ role: "member" })
-            .skip(skip)
-            .limit(limit)
-            .sort({ createdAt: -1 }); // or { _id: -1 } if no createdAt
+        // Filtered results
+        const totalResults = await Users.countDocuments(filter);
+        const totalPages = Math.max(Math.ceil(totalResults / limit), 1);
 
-        const totalPages = Math.ceil(totalMembers / limit);
+        const members = await Users.find(filter)
+            .collation({ locale: "en" }) // case-insensitive name sorting
+            .sort(SORTS[sort] || SORTS.newest)
+            .skip(skip)
+            .limit(limit);
 
         return NextResponse.json({
             members,
@@ -46,7 +68,8 @@ export const GET = async (req: Request) => {
             totalPages,
             totalMembers,
             totalActivated,
-            totalInactive
+            totalInactive,
+            totalResults,
         });
 
     } catch (error) {

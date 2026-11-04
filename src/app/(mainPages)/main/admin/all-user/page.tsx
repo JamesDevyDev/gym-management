@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { Users, UserCheck, UserX, Mail, Calendar, Shield, ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { Users, UserCheck, UserX, Calendar, Shield, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
 import useAdminStore from '@/zustand/useAdminStore'
 import CreateAdminModal from './createStaffModal';
 import DeleteModalStaff from './deleteModalStaff';
@@ -26,7 +26,7 @@ interface User {
 
 const Page = () => {
     const router = useRouter()
-    const { getAllUsers } = useAdminStore()  // Add deleteMembers here
+    const { getAllUsers } = useAdminStore()
     const { getAuthUserFunction } = useAuthStore()
 
     // Auth state
@@ -79,7 +79,7 @@ const Page = () => {
         setCurrentPage(1)
     }, [selectedRole, searchQuery])
 
-    
+
     if (loading) {
         return (
             <div className="flex items-center justify-center w-full h-screen bg-gray-100">
@@ -87,10 +87,6 @@ const Page = () => {
             </div>
         )
     }
-
-
-
-
 
     // Filter users based on selected role and search query
     const filteredUsers = users.filter(user => {
@@ -112,17 +108,20 @@ const Page = () => {
     const endIndex = startIndex + itemsPerPage
     const paginatedUsers = filteredUsers.slice(startIndex, endIndex)
 
+    const RoleIcon = selectedRole === 'staff' ? Shield : Users
+    const roleLabel = selectedRole === 'staff' ? 'Staff' : 'Members'
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+        <div className="min-h-screen bg-gray-50 p-8">
             <div className="max-w-7xl mx-auto">
                 <div className="mb-8 flex items-center justify-end">
 
                     {/* Role Selector */}
-                    <div className="flex items-center gap-2 bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+                    <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 p-1">
                         <button
                             onClick={() => setSelectedRole('staff')}
                             className={`cursor-pointer px-4 py-2 rounded-md font-medium text-sm transition-all flex items-center gap-2 ${selectedRole === 'staff'
-                                ? 'bg-purple-600 text-white shadow-sm'
+                                ? 'bg-black text-white'
                                 : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                         >
@@ -132,7 +131,7 @@ const Page = () => {
                         <button
                             onClick={() => setSelectedRole('member')}
                             className={`cursor-pointer px-4 py-2 rounded-md font-medium text-sm transition-all flex items-center gap-2 ${selectedRole === 'member'
-                                ? 'bg-blue-600 text-white shadow-sm'
+                                ? 'bg-black text-white'
                                 : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                         >
@@ -143,21 +142,11 @@ const Page = () => {
                 </div>
 
                 {/* Section Header */}
-                <div className="flex items-center justify-between gap-3 mb-6 ">
-                    <div className='flex items-center gap-3'>
-                        {selectedRole === 'staff' ? (
-                            <>
-                                <Shield className="w-6 h-6 text-purple-600" />
-                                <h2 className="text-2xl font-semibold text-gray-800">Staff</h2>
-                            </>
-                        ) : (
-                            <>
-                                <Users className="w-6 h-6 text-blue-600" />
-                                <h2 className="text-2xl font-semibold text-gray-800">Members</h2>
-                            </>
-                        )}
-                        <span className={`${selectedRole === 'staff' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                            } text-sm font-medium px-3 py-1 rounded-full`}>
+                <div className="flex items-center justify-between gap-3 mb-6">
+                    <div className="flex items-center gap-3">
+                        <RoleIcon className="w-6 h-6 text-black" />
+                        <h2 className="text-2xl font-semibold text-black">{roleLabel}</h2>
+                        <span className="bg-gray-100 text-black border border-gray-300 text-sm font-medium px-3 py-1 rounded-full">
                             {totalCount}
                         </span>
                     </div>
@@ -167,87 +156,81 @@ const Page = () => {
                 </div>
 
                 {/* Search Bar */}
-                <div className="mb-6 ">
+                <div className="mb-6 flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 focus-within:border-black focus-within:ring-1 focus-within:ring-black transition-all">
+                    <Search className="h-4 w-4 shrink-0 text-gray-400" />
                     <input
                         type="text"
                         placeholder={`Search ${selectedRole === 'staff' ? 'staff' : 'members'} by name or email...`}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                        className="w-full bg-transparent py-3 text-black outline-none"
                     />
                     {searchQuery && (
                         <button
                             onClick={() => setSearchQuery('')}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            className="shrink-0 rounded p-1 text-gray-400 hover:text-black"
+                            aria-label="Clear search"
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X className="h-5 w-5" />
                         </button>
                     )}
-
                 </div>
 
                 {/* Statistics Cards */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-6">
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-medium text-gray-600 mb-1">
+                                <p className="text-xs font-medium text-gray-500 mb-1">
                                     Total {selectedRole === 'staff' ? 'Staff' : 'Members'}
                                 </p>
                                 {isLoading ? (
                                     <div className="skeleton h-8 w-16"></div>
                                 ) : (
-                                    <p className="text-2xl font-bold text-gray-900">{totalCount}</p>
+                                    <p className="text-2xl font-bold text-black">{totalCount}</p>
                                 )}
                             </div>
-                            <div className={`p-2 ${selectedRole === 'staff' ? 'bg-purple-50' : 'bg-blue-50'
-                                } rounded-lg`}>
-                                {selectedRole === 'staff' ? (
-                                    <Shield className="w-5 h-5 text-purple-600" />
-                                ) : (
-                                    <Users className="w-5 h-5 text-blue-600" />
-                                )}
+                            <div className="p-2 bg-gray-100 rounded-lg">
+                                <RoleIcon className="w-5 h-5 text-black" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-medium text-gray-600 mb-1">Activated</p>
+                                <p className="text-xs font-medium text-gray-500 mb-1">Activated</p>
                                 {isLoading ? (
                                     <div className="skeleton h-8 w-16"></div>
                                 ) : (
-                                    <p className="text-2xl font-bold text-green-600">{totalActivated}</p>
+                                    <p className="text-2xl font-bold text-black">{totalActivated}</p>
                                 )}
                             </div>
-                            <div className="p-2 bg-green-50 rounded-lg">
-                                <UserCheck className="w-5 h-5 text-green-600" />
+                            <div className="p-2 bg-gray-100 rounded-lg">
+                                <UserCheck className="w-5 h-5 text-black" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-medium text-gray-600 mb-1">Inactive</p>
+                                <p className="text-xs font-medium text-gray-500 mb-1">Inactive</p>
                                 {isLoading ? (
                                     <div className="skeleton h-8 w-16"></div>
                                 ) : (
-                                    <p className="text-2xl font-bold text-orange-600">{totalInactive}</p>
+                                    <p className="text-2xl font-bold text-black">{totalInactive}</p>
                                 )}
                             </div>
-                            <div className="p-2 bg-orange-50 rounded-lg">
-                                <UserX className="w-5 h-5 text-orange-600" />
+                            <div className="p-2 bg-gray-100 rounded-lg">
+                                <UserX className="w-5 h-5 text-black" />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Users List */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
                     <div className="divide-y divide-gray-200">
                         {isLoading ? (
                             Array.from({ length: 5 }).map((_, index) => (
@@ -272,21 +255,16 @@ const Page = () => {
                                         <div className="flex-1 min-w-0">
                                             {/* Username and Role Badge */}
                                             <div className="flex items-center gap-3 mb-3">
-                                                <h3 className="font-semibold text-gray-900 text-lg truncate">
+                                                <h3 className="font-semibold text-black text-lg truncate">
                                                     {user.username}
                                                 </h3>
-                                                <span
-                                                    className={`px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap ${selectedRole === 'staff'
-                                                        ? 'bg-purple-100 text-purple-700'
-                                                        : 'bg-blue-100 text-blue-700'
-                                                        }`}
-                                                >
+                                                <span className="px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap bg-gray-100 text-black border border-gray-300">
                                                     {selectedRole === 'staff' ? 'Staff' : 'Member'}
                                                 </span>
                                                 <span
-                                                    className={`px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap ${user.activated
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-orange-100 text-orange-700'
+                                                    className={`px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap border ${user.activated
+                                                        ? 'bg-black text-white border-black'
+                                                        : 'bg-white text-gray-500 border-gray-300'
                                                         }`}
                                                 >
                                                     {user.activated ? 'Active' : 'Inactive'}
@@ -299,7 +277,7 @@ const Page = () => {
                                                 {user?.role === 'staff' && (
                                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                                         <span className="font-medium">Scan Count:</span>
-                                                        <span className="text-gray-900 font-semibold">
+                                                        <span className="text-black font-semibold">
                                                             {user?.NumberOfScans || 0}
                                                         </span>
                                                     </div>
@@ -309,7 +287,7 @@ const Page = () => {
                                                 {user?.role === 'member' && user?.activated && user?.startTime && (
                                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                                         <span className="font-medium">Start Time:</span>
-                                                        <span className="text-gray-900">
+                                                        <span className="text-black">
                                                             {new Date(user.startTime).toLocaleDateString("en-US", {
                                                                 year: "numeric",
                                                                 month: "long",
@@ -323,7 +301,7 @@ const Page = () => {
                                                 {user?.role === 'member' && user?.duration && (
                                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                                         <span className="font-medium">Duration:</span>
-                                                        <span className="text-gray-900">
+                                                        <span className="text-black">
                                                             {new Date(user.duration).toLocaleDateString("en-US", {
                                                                 year: "numeric",
                                                                 month: "long",
@@ -337,7 +315,7 @@ const Page = () => {
                                                 <div className="flex items-center gap-2 text-sm text-gray-600">
                                                     <Calendar className="w-4 h-4" />
                                                     <span className="font-medium">Created:</span>
-                                                    <span className="text-gray-900">
+                                                    <span className="text-black">
                                                         {new Date(user.createdAt).toLocaleDateString("en-US", {
                                                             year: "numeric",
                                                             month: "long",
@@ -364,7 +342,7 @@ const Page = () => {
                                         <p className="mb-2">No {selectedRole === 'staff' ? 'staff members' : 'members'} found matching "{searchQuery}"</p>
                                         <button
                                             onClick={() => setSearchQuery('')}
-                                            className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                                            className="text-black underline hover:text-gray-600 font-medium text-sm"
                                         >
                                             Clear search
                                         </button>
@@ -381,8 +359,8 @@ const Page = () => {
                         <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
                             <div className="flex items-center justify-between">
                                 <div className="text-sm text-gray-600">
-                                    Showing page <span className="font-semibold text-gray-900">{currentPage}</span> of{" "}
-                                    <span className="font-semibold text-gray-900">{totalPages}</span>
+                                    Showing page <span className="font-semibold text-black">{currentPage}</span> of{" "}
+                                    <span className="font-semibold text-black">{totalPages}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button

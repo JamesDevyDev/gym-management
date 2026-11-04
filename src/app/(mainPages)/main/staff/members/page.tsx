@@ -1,7 +1,7 @@
 'use client'
-import { Users, UserCheck, UserX, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, UserCheck, UserX, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import useStaffStore from "@/zustand/useStaffStore";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import ActivationModal from "./ActivationModal";
 import ViewModal from "./ViewModal";
@@ -41,7 +41,16 @@ export default function StaffMembersPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [totalActivated, setTotalActivated] = useState(0);
     const [totalInactive, setTotalInactive] = useState(0);
+    const [totalResults, setTotalResults] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Filters
+    const [searchInput, setSearchInput] = useState('');   // what the user types
+    const [search, setSearch] = useState('');             // debounced value sent to the API
+    const [status, setStatus] = useState('all');          // all | active | inactive
+    const [sort, setSort] = useState('newest');           // newest | oldest | name_asc | name_desc
+
+    const requestId = useRef(0); // ignores stale responses
 
     // ---------------------------
     // Auth Check Effect
@@ -62,10 +71,25 @@ export default function StaffMembersPage() {
         checkRole();
     }, [router, getAuthUserFunction]);
 
+    // ---------------------------
+    // Debounce search (400ms) and reset to page 1
+    // ---------------------------
+    useEffect(() => {
+        const t = setTimeout(() => {
+            setSearch(searchInput.trim());
+            setCurrentPage(1);
+        }, 400);
+        return () => clearTimeout(t);
+    }, [searchInput]);
+
     // Fetch members data
     const fetchMembers = async () => {
+        const id = ++requestId.current;
         setIsLoading(true);
-        const data = await getMembers(currentPage);
+
+        const data = await getMembers(currentPage, { search, status, sort });
+
+        if (id !== requestId.current) return; // a newer request replaced this one
 
         setMembers(data?.members || []);
         setCurrentPage(data?.currentPage || 1);
@@ -73,6 +97,7 @@ export default function StaffMembersPage() {
         setTotalPages(data?.totalPages || 1);
         setTotalActivated(data?.totalActivated || 0);
         setTotalInactive(data?.totalInactive || 0);
+        setTotalResults(data?.totalResults || 0);
         setIsLoading(false);
     };
 
@@ -81,10 +106,20 @@ export default function StaffMembersPage() {
         if (!loading && user) {
             fetchMembers();
         }
-    }, [currentPage, loading, user]);
+    }, [currentPage, search, status, sort, loading, user]);
 
     const nextPage = () => setCurrentPage(currentPage + 1);
     const previousPage = () => setCurrentPage(currentPage - 1);
+
+    const hasFilters = searchInput !== '' || status !== 'all' || sort !== 'newest';
+
+    const clearFilters = () => {
+        setSearchInput('');
+        setSearch('');
+        setStatus('all');
+        setSort('newest');
+        setCurrentPage(1);
+    };
 
     // ✅ NOW IT'S SAFE TO DO CONDITIONAL RENDERING (AFTER ALL HOOKS)
     if (loading) {
@@ -151,6 +186,62 @@ export default function StaffMembersPage() {
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    {/* Filters */}
+                    <div className="flex flex-col gap-3 border-b border-gray-200 bg-gray-50 p-4 md:flex-row md:items-center">
+                        {/* Search */}
+                        <div className="flex flex-1 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+                            <Search className="h-4 w-4 shrink-0 text-gray-400" />
+                            <input
+                                type="text"
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                                placeholder="Search by username or email..."
+                                className="w-full bg-transparent py-2 text-sm text-gray-900 outline-none"
+                            />
+                            {searchInput && (
+                                <button
+                                    onClick={() => setSearchInput('')}
+                                    className="shrink-0 rounded p-1 text-gray-400 hover:text-gray-600"
+                                    aria-label="Clear search"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Status */}
+                        <select
+                            value={status}
+                            onChange={(e) => { setStatus(e.target.value); setCurrentPage(1); }}
+                            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none"
+                        >
+                            <option value="all">All status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+
+                        {/* Sort */}
+                        <select
+                            value={sort}
+                            onChange={(e) => { setSort(e.target.value); setCurrentPage(1); }}
+                            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none"
+                        >
+                            <option value="newest">Newest first</option>
+                            <option value="oldest">Oldest first</option>
+                            <option value="name_asc">Name A–Z</option>
+                            <option value="name_desc">Name Z–A</option>
+                        </select>
+
+                        {hasFilters && (
+                            <button
+                                onClick={clearFilters}
+                                className="cursor-pointer whitespace-nowrap text-sm font-medium text-blue-600 hover:text-blue-800"
+                            >
+                                Clear
+                            </button>
+                        )}
+                    </div>
+
                     {/* Members List */}
                     <div className="divide-y divide-gray-200">
                         {isLoading ? (
@@ -175,6 +266,11 @@ export default function StaffMembersPage() {
                                     </div>
                                 </div>
                             ))
+                        ) : members.length === 0 ? (
+                            // Empty state
+                            <div className="p-10 text-center text-sm text-gray-500">
+                                No members match your filters.
+                            </div>
                         ) : (
                             // Actual member cards
                             members.map((member) => (
@@ -264,6 +360,7 @@ export default function StaffMembersPage() {
                                     <>
                                         Showing page <span className="font-semibold text-gray-900">{currentPage}</span> of{" "}
                                         <span className="font-semibold text-gray-900">{totalPages}</span>
+                                        <span className="text-gray-400"> · {totalResults} result{totalResults === 1 ? '' : 's'}</span>
                                     </>
                                 )}
                             </div>

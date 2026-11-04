@@ -49,6 +49,45 @@ interface MonthlyAnalytics {
     topMembers: { username: string; totalSpent: number; transactionCount: number }[]
 }
 
+// SVG icon paths (same icons as before)
+const ICONS = {
+    money: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+    chart: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+    clipboard: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+    users: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+    check: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+    badge: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
+    userPlus: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z',
+    trend: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+}
+
+const StatCard = ({
+    label,
+    value,
+    sub,
+    icon,
+}: {
+    label: string
+    value: string | number
+    sub?: string
+    icon: string
+}) => (
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between">
+            <div>
+                <p className="text-sm text-gray-500 mb-1">{label}</p>
+                <p className="text-2xl font-bold text-black">{value}</p>
+                {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
+            </div>
+            <div className="bg-gray-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
+                </svg>
+            </div>
+        </div>
+    </div>
+)
+
 const Dashboard = () => {
     const router = useRouter()
     const { getAuthUserFunction } = useAuthStore()
@@ -218,156 +257,74 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+        <div className="min-h-screen bg-gray-50 p-8">
             <div className="max-w-7xl mx-auto">
                 {/* Analytics Cards */}
                 {analytics && userStats && (
                     <>
                         {/* Financial & Transaction Metrics */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                            {/* Total Revenue */}
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-                                        <p className="text-2xl font-bold text-gray-800">
-                                            ₱{analytics.totalRevenue.toLocaleString()}
-                                        </p>
-                                    </div>
-                                    <div className="bg-green-100 p-3 rounded-full">
-                                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Monthly Revenue */}
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">Monthly Revenue</p>
-                                        <p className="text-2xl font-bold text-gray-800">
-                                            ₱{analytics.monthlyRevenue.toLocaleString()}
-                                        </p>
-                                    </div>
-                                    <div className="bg-blue-100 p-3 rounded-full">
-                                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Total Transactions */}
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">Total Transactions</p>
-                                        <p className="text-2xl font-bold text-gray-800">
-                                            {analytics.totalTransactions}
-                                        </p>
-                                    </div>
-                                    <div className="bg-purple-100 p-3 rounded-full">
-                                        <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
+                            <StatCard
+                                label="Total Revenue"
+                                value={`₱${analytics.totalRevenue.toLocaleString()}`}
+                                icon={ICONS.money}
+                            />
+                            <StatCard
+                                label="Monthly Revenue"
+                                value={`₱${analytics.monthlyRevenue.toLocaleString()}`}
+                                icon={ICONS.chart}
+                            />
+                            <StatCard
+                                label="Total Transactions"
+                                value={analytics.totalTransactions}
+                                icon={ICONS.clipboard}
+                            />
                         </div>
 
                         {/* User Statistics */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                            {/* Total Users */}
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">Total Members</p>
-                                        <p className="text-2xl font-bold text-gray-800">
-                                            {userStats.totalUsers}
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">Registered members</p>
-                                    </div>
-                                    <div className="bg-indigo-100 p-3 rounded-full">
-                                        <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Active Users */}
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">Active Accounts</p>
-                                        <p className="text-2xl font-bold text-gray-800">
-                                            {userStats.activeUsers}
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            {userStats.totalUsers > 0
-                                                ? `${((userStats.activeUsers / userStats.totalUsers) * 100).toFixed(1)}% activation rate`
-                                                : '0% activation rate'}
-                                        </p>
-                                    </div>
-                                    <div className="bg-emerald-100 p-3 rounded-full">
-                                        <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Active Memberships */}
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">Active Memberships</p>
-                                        <p className="text-2xl font-bold text-gray-800">
-                                            {analytics.activeMembers}
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">Not expired</p>
-                                    </div>
-                                    <div className="bg-orange-100 p-3 rounded-full">
-                                        <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Registered Today */}
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">New Today</p>
-                                        <p className="text-2xl font-bold text-gray-800">
-                                            {userStats.registeredToday}
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">Registered today</p>
-                                    </div>
-                                    <div className="bg-pink-100 p-3 rounded-full">
-                                        <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
+                            <StatCard
+                                label="Total Members"
+                                value={userStats.totalUsers}
+                                sub="Registered members"
+                                icon={ICONS.users}
+                            />
+                            <StatCard
+                                label="Active Accounts"
+                                value={userStats.activeUsers}
+                                sub={
+                                    userStats.totalUsers > 0
+                                        ? `${((userStats.activeUsers / userStats.totalUsers) * 100).toFixed(1)}% activation rate`
+                                        : '0% activation rate'
+                                }
+                                icon={ICONS.check}
+                            />
+                            <StatCard
+                                label="Active Memberships"
+                                value={analytics.activeMembers}
+                                sub="Not expired"
+                                icon={ICONS.badge}
+                            />
+                            <StatCard
+                                label="New Today"
+                                value={userStats.registeredToday}
+                                sub="Registered today"
+                                icon={ICONS.userPlus}
+                            />
                         </div>
 
                         {/* Month Selector */}
-                        <div className="bg-white rounded-lg shadow p-6 mb-8">
+                        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
                             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                 <div>
-                                    <h2 className="text-xl font-semibold text-gray-800">In-Depth Monthly Analytics</h2>
-                                    <p className="text-sm text-gray-600 mt-1">Select a month to view detailed analytics</p>
+                                    <h2 className="text-xl font-semibold text-black">In-Depth Monthly Analytics</h2>
+                                    <p className="text-sm text-gray-500 mt-1">Select a month to view detailed analytics</p>
                                 </div>
                                 <div className="flex gap-3">
                                     <select
                                         value={selectedMonth}
                                         onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                                        className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-black focus:outline-none focus:ring-2 focus:ring-black"
                                     >
                                         {months.map((month, index) => (
                                             <option key={index} value={index}>
@@ -378,7 +335,7 @@ const Dashboard = () => {
                                     <select
                                         value={selectedYear}
                                         onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                        className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-black focus:outline-none focus:ring-2 focus:ring-black"
                                     >
                                         {getAvailableYears().length > 0 ? (
                                             getAvailableYears().map((year) => (
@@ -400,86 +357,37 @@ const Dashboard = () => {
                         {monthlyAnalytics && (
                             <>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                                    {/* Monthly Revenue */}
-                                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow p-6">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="text-sm text-blue-700 mb-1">Revenue</p>
-                                                <p className="text-2xl font-bold text-blue-900">
-                                                    ₱{monthlyAnalytics.revenue.toLocaleString()}
-                                                </p>
-                                                <p className="text-xs text-blue-600 mt-1">
-                                                    {months[selectedMonth]} {selectedYear}
-                                                </p>
-                                            </div>
-                                            <div className="bg-blue-200 p-3 rounded-full">
-                                                <svg className="w-6 h-6 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Monthly Transactions */}
-                                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow p-6">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="text-sm text-purple-700 mb-1">Transactions</p>
-                                                <p className="text-2xl font-bold text-purple-900">
-                                                    {monthlyAnalytics.transactions}
-                                                </p>
-                                                <p className="text-xs text-purple-600 mt-1">Total count</p>
-                                            </div>
-                                            <div className="bg-purple-200 p-3 rounded-full">
-                                                <svg className="w-6 h-6 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Average Transaction */}
-                                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow p-6">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="text-sm text-green-700 mb-1">Avg Transaction</p>
-                                                <p className="text-2xl font-bold text-green-900">
-                                                    ₱{monthlyAnalytics.averageTransaction.toFixed(2)}
-                                                </p>
-                                                <p className="text-xs text-green-600 mt-1">Per transaction</p>
-                                            </div>
-                                            <div className="bg-green-200 p-3 rounded-full">
-                                                <svg className="w-6 h-6 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* New Members */}
-                                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow p-6">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="text-sm text-orange-700 mb-1">New Members</p>
-                                                <p className="text-2xl font-bold text-orange-900">
-                                                    {monthlyAnalytics.newMembers}
-                                                </p>
-                                                <p className="text-xs text-orange-600 mt-1">Registered</p>
-                                            </div>
-                                            <div className="bg-orange-200 p-3 rounded-full">
-                                                <svg className="w-6 h-6 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <StatCard
+                                        label="Revenue"
+                                        value={`₱${monthlyAnalytics.revenue.toLocaleString()}`}
+                                        sub={`${months[selectedMonth]} ${selectedYear}`}
+                                        icon={ICONS.money}
+                                    />
+                                    <StatCard
+                                        label="Transactions"
+                                        value={monthlyAnalytics.transactions}
+                                        sub="Total count"
+                                        icon={ICONS.clipboard}
+                                    />
+                                    <StatCard
+                                        label="Avg Transaction"
+                                        value={`₱${monthlyAnalytics.averageTransaction.toFixed(2)}`}
+                                        sub="Per transaction"
+                                        icon={ICONS.trend}
+                                    />
+                                    <StatCard
+                                        label="New Members"
+                                        value={monthlyAnalytics.newMembers}
+                                        sub="Registered"
+                                        icon={ICONS.userPlus}
+                                    />
                                 </div>
 
                                 {/* Monthly Revenue by Payment Method & Daily Revenue Chart */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                                     {/* Payment Methods Breakdown */}
-                                    <div className="bg-white rounded-lg shadow p-6">
-                                        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                                    <div className="bg-white rounded-lg border border-gray-200 p-6">
+                                        <h3 className="text-lg font-semibold text-black mb-4">
                                             Payment Methods - {months[selectedMonth]} {selectedYear}
                                         </h3>
                                         {Object.keys(monthlyAnalytics.revenueByMethod).length > 0 ? (
@@ -494,13 +402,13 @@ const Dashboard = () => {
                                                                 <span className="text-sm font-medium text-gray-700 capitalize">
                                                                     {method.replace('_', ' ')}
                                                                 </span>
-                                                                <span className="text-sm font-semibold text-gray-800">
+                                                                <span className="text-sm font-semibold text-black">
                                                                     ₱{amount.toLocaleString()} ({percentage.toFixed(1)}%)
                                                                 </span>
                                                             </div>
                                                             <div className="w-full bg-gray-200 rounded-full h-2">
                                                                 <div
-                                                                    className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                                                                    className="bg-black h-2 rounded-full transition-all duration-500"
                                                                     style={{ width: `${percentage}%` }}
                                                                 />
                                                             </div>
@@ -514,8 +422,8 @@ const Dashboard = () => {
                                     </div>
 
                                     {/* Daily Revenue Visualization */}
-                                    <div className="bg-white rounded-lg shadow p-6">
-                                        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                                    <div className="bg-white rounded-lg border border-gray-200 p-6">
+                                        <h3 className="text-lg font-semibold text-black mb-4">
                                             Daily Revenue Trend
                                         </h3>
                                         <div className="h-64 flex items-end justify-between gap-1">
@@ -526,11 +434,11 @@ const Dashboard = () => {
                                                     <div key={day.day} className="flex-1 flex flex-col items-center justify-end group">
                                                         <div className="relative w-full">
                                                             <div
-                                                                className="w-full bg-blue-500 hover:bg-blue-600 transition-all rounded-t cursor-pointer"
+                                                                className="w-full bg-black hover:bg-gray-600 transition-all rounded-t cursor-pointer"
                                                                 style={{ height: `${Math.max(height, 2)}px` }}
                                                                 title={`Day ${day.day}: ₱${day.revenue.toLocaleString()}`}
                                                             />
-                                                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                                                                 ₱{day.revenue.toLocaleString()}
                                                             </div>
                                                         </div>
@@ -545,8 +453,8 @@ const Dashboard = () => {
                                 </div>
 
                                 {/* Top Members for the Month */}
-                                <div className="bg-white rounded-lg shadow p-6 mb-8">
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                                <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+                                    <h3 className="text-lg font-semibold text-black mb-4">
                                         Top Members - {months[selectedMonth]} {selectedYear}
                                     </h3>
                                     {monthlyAnalytics.topMembers.length > 0 ? (
@@ -565,25 +473,19 @@ const Dashboard = () => {
                                                     {monthlyAnalytics.topMembers.map((member, index) => (
                                                         <tr key={member.username} className="border-b border-gray-100 hover:bg-gray-50">
                                                             <td className="py-3 px-4">
-                                                                <div className="flex items-center">
-                                                                    {index === 0 && (
-                                                                        <span className="text-yellow-500 text-xl mr-2">🥇</span>
-                                                                    )}
-                                                                    {index === 1 && (
-                                                                        <span className="text-gray-400 text-xl mr-2">🥈</span>
-                                                                    )}
-                                                                    {index === 2 && (
-                                                                        <span className="text-orange-600 text-xl mr-2">🥉</span>
-                                                                    )}
-                                                                    <span className="text-sm font-semibold text-gray-800">
-                                                                        {index + 1}
-                                                                    </span>
-                                                                </div>
+                                                                <span
+                                                                    className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold ${index === 0
+                                                                        ? 'bg-black text-white'
+                                                                        : 'bg-gray-100 text-black'
+                                                                        }`}
+                                                                >
+                                                                    {index + 1}
+                                                                </span>
                                                             </td>
-                                                            <td className="py-3 px-4 text-sm font-medium text-gray-800">
+                                                            <td className="py-3 px-4 text-sm font-medium text-black">
                                                                 {member.username}
                                                             </td>
-                                                            <td className="py-3 px-4 text-sm font-semibold text-green-600">
+                                                            <td className="py-3 px-4 text-sm font-semibold text-black">
                                                                 ₱{member.totalSpent.toLocaleString()}
                                                             </td>
                                                             <td className="py-3 px-4 text-sm text-gray-600">
@@ -606,8 +508,8 @@ const Dashboard = () => {
 
                         {/* Revenue by Payment Method & Quick Stats */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <h2 className="text-xl font-semibold text-gray-800 mb-4">All-Time Revenue by Payment Method</h2>
+                            <div className="bg-white rounded-lg border border-gray-200 p-6">
+                                <h2 className="text-xl font-semibold text-black mb-4">All-Time Revenue by Payment Method</h2>
                                 <div className="space-y-4">
                                     {Object.entries(analytics.revenueByMethod).map(([method, amount]) => {
                                         const percentage = (amount / analytics.totalRevenue) * 100
@@ -617,13 +519,13 @@ const Dashboard = () => {
                                                     <span className="text-sm font-medium text-gray-700 capitalize">
                                                         {method.replace('_', ' ')}
                                                     </span>
-                                                    <span className="text-sm font-semibold text-gray-800">
+                                                    <span className="text-sm font-semibold text-black">
                                                         ₱{amount.toLocaleString()} ({percentage.toFixed(1)}%)
                                                     </span>
                                                 </div>
                                                 <div className="w-full bg-gray-200 rounded-full h-2">
                                                     <div
-                                                        className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                                                        className="bg-black h-2 rounded-full transition-all duration-500"
                                                         style={{ width: `${percentage}%` }}
                                                     />
                                                 </div>
@@ -634,24 +536,24 @@ const Dashboard = () => {
                             </div>
 
                             {/* Quick Stats */}
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Stats</h2>
+                            <div className="bg-white rounded-lg border border-gray-200 p-6">
+                                <h2 className="text-xl font-semibold text-black mb-4">Quick Stats</h2>
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center py-3 border-b border-gray-200">
                                         <span className="text-gray-600">Average Transaction</span>
-                                        <span className="text-lg font-semibold text-gray-800">
+                                        <span className="text-lg font-semibold text-black">
                                             ₱{analytics.averageTransaction.toFixed(2)}
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center py-3 border-b border-gray-200">
                                         <span className="text-gray-600">Payment Methods</span>
-                                        <span className="text-lg font-semibold text-gray-800">
+                                        <span className="text-lg font-semibold text-black">
                                             {Object.keys(analytics.revenueByMethod).length}
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center py-3 border-b border-gray-200">
                                         <span className="text-gray-600">Membership Rate</span>
-                                        <span className="text-lg font-semibold text-gray-800">
+                                        <span className="text-lg font-semibold text-black">
                                             {analytics.totalTransactions > 0
                                                 ? ((analytics.activeMembers / analytics.totalTransactions) * 100).toFixed(1)
                                                 : 0}%
@@ -659,7 +561,7 @@ const Dashboard = () => {
                                     </div>
                                     <div className="flex justify-between items-center py-3">
                                         <span className="text-gray-600">Inactive Accounts</span>
-                                        <span className="text-lg font-semibold text-gray-800">
+                                        <span className="text-lg font-semibold text-black">
                                             {userStats.totalUsers - userStats.activeUsers}
                                         </span>
                                     </div>
@@ -668,8 +570,8 @@ const Dashboard = () => {
                         </div>
 
                         {/* Recent Transactions */}
-                        <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-xl font-semibold text-gray-800 mb-4">Recent Transactions</h2>
+                        <div className="bg-white rounded-lg border border-gray-200 p-6">
+                            <h2 className="text-xl font-semibold text-black mb-4">Recent Transactions</h2>
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
@@ -685,20 +587,20 @@ const Dashboard = () => {
                                     <tbody>
                                         {analytics.recentTransactions.map((transaction) => (
                                             <tr key={transaction._id} className="border-b border-gray-100 hover:bg-gray-50">
-                                                <td className="py-3 px-4 text-sm text-gray-800 font-mono">
+                                                <td className="py-3 px-4 text-sm text-black font-mono">
                                                     {transaction.reference}
                                                 </td>
-                                                <td className="py-3 px-4 text-sm text-gray-800">
+                                                <td className="py-3 px-4 text-sm text-black">
                                                     {transaction.userId.username}
                                                 </td>
-                                                <td className="py-3 px-4 text-sm font-semibold text-gray-800">
+                                                <td className="py-3 px-4 text-sm font-semibold text-black">
                                                     ₱{transaction.amount.toLocaleString()}
                                                 </td>
                                                 <td className="py-3 px-4 text-sm text-gray-600">
                                                     {transaction.membershipDuration} {transaction.membershipDuration === 1 ? 'month' : 'months'}
                                                 </td>
                                                 <td className="py-3 px-4">
-                                                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 capitalize">
+                                                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-black border border-gray-300 capitalize">
                                                         {transaction.paymentMethod.replace('_', ' ')}
                                                     </span>
                                                 </td>

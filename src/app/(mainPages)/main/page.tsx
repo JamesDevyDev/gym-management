@@ -23,7 +23,7 @@ const Main = () => {
                     else if (user?.role === 'staff') router.push("/main/staff")
                     else if (user?.role === 'member') router.push("/main/member")
                     else setLoading(false)
-                }, 2000)
+                }, 1000)
             } catch (error) {
                 console.error("Error fetching user:", error)
                 setLoading(false)
